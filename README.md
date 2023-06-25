@@ -7,7 +7,7 @@ RISC-V Simulator is the first lab of PPCA (CS1952@SJTU, 2023 Summer). It simulat
 Run command ```cmake . && make``` to compile it and run by ```./code```.
 
 ## Plan
-- [ ] 06-21 Draw an outline for the project and design the basic structure
+- [ ] 06-24 Draw an outline for the project and design the basic structure
 
 ## Structure
 For more details about the structure and operations, please see [Structure Document](docs/structure.md). (Unfinished)
