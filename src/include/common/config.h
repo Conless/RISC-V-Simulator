@@ -4,7 +4,7 @@
 namespace conless {
 
 constexpr int MAX_QUEUE_SIZE = 32;
-constexpr int MAX_RAM_SIZE = 1 << 20;
+constexpr int MAX_RAM_SIZE = 1 << 13;
 }
 
 #endif

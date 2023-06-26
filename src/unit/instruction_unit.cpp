@@ -3,6 +3,7 @@
 #include <exception>
 #include "common/types.h"
 #include "simulator.h"
+#include "unit/reorder_buffer.h"
 
 namespace conless {
 
@@ -184,18 +185,41 @@ void Decode(WordType ins_reg, InsType &ins) {
   DecodeOther(ins_reg, ins);
 }
 
-void InstructionUnit::FetchDecode(Simulator &current_state) {
-  WordType ins_reg = current_state.memory_->FetchWordUnsafe(current_state.pc_);
+void InstructionUnit::FetchDecode(Simulator &current_state, WordType ins_reg) {
   InsType ins;
   if (ins_queue_.full() || current_state.stall_) {
     return;
   }
   if (ins_reg == 0x0ff00513) {
-    // TODO(conless): fix this instruction
+    current_state.stall_ = true;
     return;
   }
   Decode(ins_reg, ins);
   ins_queue_.push(ins);
   current_state.pc_ += 4;
+}
+
+void InstructionUnit::Issue(Simulator &current_state) {
+  if (ins_queue_.empty() || current_state.rob_full_) {
+    return;
+  }
+  InsType ins = ins_queue_.front();
+  if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
+    if (current_state.rss_ls_full_) {
+      return;
+    }
+    RobEntry next_entry{ins, InsState::Commit};
+    if (ins.opcode_type_ == OpcodeType::LOAD) {
+      next_entry.dest_ = ins.rd_;
+      next_entry.dest_offset_ = 0;
+    } else {
+      next_entry.dest_ = -1;
+      next_entry.dest_offset_ = ins.imm_;
+    }
+  } else {
+    if (current_state.rss_arith_full_) {
+      return;
+    }
+  }
 }
 }  // namespace conless
