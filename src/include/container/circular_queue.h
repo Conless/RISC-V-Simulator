@@ -10,30 +10,30 @@
 namespace conless {
 
 template <class T>
-class circular_queue { // NOLINT
+class circular_queue {  // NOLINT
   using value_type = T;
 
  public:
-  auto push(const T &data) -> bool { // NOLINT
+  auto push(const T &data) -> bool {  // NOLINT
     if (size() == MAX_QUEUE_SIZE) {
       return false;
     }
     queue_[(++tail_) % MAX_QUEUE_SIZE] = data;
     return true;
   }
-  auto pop() -> const T & { // NOLINT
+  auto pop() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
     return queue_[(head_++) % MAX_QUEUE_SIZE];
   }
-  auto front() -> const T & { // NOLINT
+  auto front() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
     return queue_[head_ % MAX_QUEUE_SIZE];
   }
-  auto back() -> const T & { // NOLINT
+  auto back() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
@@ -42,14 +42,15 @@ class circular_queue { // NOLINT
   auto operator[](const size_t &pos) -> T & { return queue_[pos % MAX_QUEUE_SIZE]; }
 
  public:
-  auto head() -> int { return head_; } // NOLINT
-  auto tail() -> int { return tail_; } // NOLINT
-  auto size() -> size_t { return tail_ - head_ + 1; } // NOLINT
-  auto empty() -> bool { return head_ > tail_; } // NOLINT
+  auto head() -> int { return head_; }                      // NOLINT
+  auto tail() -> int { return tail_; }                      // NOLINT
+  auto size() -> size_t { return tail_ - head_ + 1; }       // NOLINT
+  auto empty() -> bool { return head_ > tail_; }            // NOLINT
+  auto full() -> bool { return size() == MAX_QUEUE_SIZE; }  // NOLINT
 
  public:
   template <bool const_tag>
-  class base_iterator { // NOLINT
+  class base_iterator {  // NOLINT
     friend class circular_queue;
     friend class base_iterator<true>;
     friend class base_iterator<false>;
@@ -103,19 +104,18 @@ class circular_queue { // NOLINT
   using const_iterator = base_iterator<true>;
 
  public:
-  auto begin() -> iterator { // NOLINT
+  auto begin() -> iterator {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
     return {this, head_};
   }
-  auto end() -> iterator { // NOLINT
+  auto end() -> iterator {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
     return {this, tail_ + 1};
   }
-  
 
  private:
   int head_{0};
