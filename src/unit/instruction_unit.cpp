@@ -4,6 +4,7 @@
 #include "common/types.h"
 #include "simulator.h"
 #include "unit/reorder_buffer.h"
+#include "unit/reservation_station.h"
 
 namespace conless {
 
@@ -15,12 +16,12 @@ auto SignExtend(uint32_t imm, uint8_t length) -> int {
   return imm | base_num;
 }
 
-void DecodeLoad(WordType ins_reg, InsType &ins) {
-  int load_type = ins_reg >> 12 & 0b11;
-  bool signed_type = (ins_reg >> 14 & 1) == 0U;
-  ins.rs1_ = ins_reg >> 15 & 0b11111;
-  ins.rd_ = ins_reg >> 7 & 0b11111;
-  ins.imm_ = SignExtend(ins_reg >> 20, 11);
+void DecodeLoad(WordType input_ins, InsType &ins) {
+  int load_type = input_ins >> 12 & 0b11;
+  bool signed_type = (input_ins >> 14 & 1) == 0U;
+  ins.rs1_ = input_ins >> 15 & 0b11111;
+  ins.rd_ = input_ins >> 7 & 0b11111;
+  ins.imm_ = SignExtend(input_ins >> 20, 11);
   if (load_type == 0b00) {
     ins.opcode_ = signed_type ? Opcode::LB : Opcode::LBU;
   } else if (load_type == 0b01) {
@@ -32,11 +33,11 @@ void DecodeLoad(WordType ins_reg, InsType &ins) {
   }
 }
 
-void DecodeStore(WordType ins_reg, InsType &ins) {
-  int store_type = ins_reg >> 12 & 0b11;
-  ins.rs1_ = ins_reg >> 15 & 0b11111;
-  ins.rs2_ = ins_reg >> 20 & 0b11111;
-  ins.imm_ = SignExtend(((ins_reg >> 25) << 5) + ((ins_reg >> 7) & 0b11111), 11);
+void DecodeStore(WordType input_ins, InsType &ins) {
+  int store_type = input_ins >> 12 & 0b11;
+  ins.rs1_ = input_ins >> 15 & 0b11111;
+  ins.rs2_ = input_ins >> 20 & 0b11111;
+  ins.imm_ = SignExtend(((input_ins >> 25) << 5) + ((input_ins >> 7) & 0b11111), 11);
   if (store_type == 0b00) {
     ins.opcode_ = Opcode::SB;
   } else if (store_type == 0b01) {
@@ -48,10 +49,10 @@ void DecodeStore(WordType ins_reg, InsType &ins) {
   }
 }
 
-void DecodeArithI(WordType ins_reg, InsType &ins) {
-  int arith_type = ins_reg >> 12 & 0b111;
-  ins.rs1_ = ins_reg >> 15 & 0b11111;
-  ins.rd_ = ins_reg >> 7 & 0b11111;
+void DecodeArithI(WordType input_ins, InsType &ins) {
+  int arith_type = input_ins >> 12 & 0b111;
+  ins.rs1_ = input_ins >> 15 & 0b11111;
+  ins.rd_ = input_ins >> 7 & 0b11111;
   if (arith_type == 0b000) {
     ins.opcode_ = Opcode::ADDI;
   } else if (arith_type == 0b010) {
@@ -65,8 +66,8 @@ void DecodeArithI(WordType ins_reg, InsType &ins) {
   } else if (arith_type == 0b111) {
     ins.opcode_ = Opcode::ANDI;
   } else {
-    bool tag_type = (ins_reg >> 30 & 0b1) == 0U;
-    ins.imm_ = ins_reg >> 20 & 0b11111;
+    bool tag_type = (input_ins >> 30 & 0b1) == 0U;
+    ins.imm_ = input_ins >> 20 & 0b11111;
     if (arith_type == 0b001) {
       ins.opcode_ = Opcode::SLLI;
     } else if (arith_type == 0b101) {
@@ -76,15 +77,15 @@ void DecodeArithI(WordType ins_reg, InsType &ins) {
     }
     return;
   }
-  ins.imm_ = SignExtend(ins_reg >> 20, 11);
+  ins.imm_ = SignExtend(input_ins >> 20, 11);
 }
 
-void DecodeArithR(WordType ins_reg, InsType &ins) {
-  int arith_type = ins_reg >> 12 & 0b111;
-  bool tag_type = (ins_reg >> 30 & 0b1) == 0U;
-  ins.rs1_ = ins_reg >> 15 & 0b11111;
-  ins.rs2_ = ins_reg >> 20 & 0b11111;
-  ins.rd_ = ins_reg >> 7 & 0b11111;
+void DecodeArithR(WordType input_ins, InsType &ins) {
+  int arith_type = input_ins >> 12 & 0b111;
+  bool tag_type = (input_ins >> 30 & 0b1) == 0U;
+  ins.rs1_ = input_ins >> 15 & 0b11111;
+  ins.rs2_ = input_ins >> 20 & 0b11111;
+  ins.rd_ = input_ins >> 7 & 0b11111;
   if (arith_type == 0b000) {
     ins.opcode_ = tag_type ? Opcode::ADD : Opcode::SUB;
   } else if (arith_type == 0b001) {
@@ -106,12 +107,12 @@ void DecodeArithR(WordType ins_reg, InsType &ins) {
   }
 }
 
-void DecodeBranch(WordType ins_reg, InsType &ins) {
-  int branch_type = ins_reg >> 12 & 0b111;
-  ins.rs1_ = ins_reg >> 15 & 0b11111;
-  ins.rs2_ = ins_reg >> 20 & 0b11111;
-  ins.imm_ = SignExtend(((ins_reg >> 31 & 0b1) << 12) + ((ins_reg >> 7 & 0b1) << 11) +
-                            ((ins_reg >> 25 & 0b111111) << 5) + ((ins_reg >> 8 & 0b1111) << 1),
+void DecodeBranch(WordType input_ins, InsType &ins) {
+  int branch_type = input_ins >> 12 & 0b111;
+  ins.rs1_ = input_ins >> 15 & 0b11111;
+  ins.rs2_ = input_ins >> 20 & 0b11111;
+  ins.imm_ = SignExtend(((input_ins >> 31 & 0b1) << 12) + ((input_ins >> 7 & 0b1) << 11) +
+                            ((input_ins >> 25 & 0b111111) << 5) + ((input_ins >> 8 & 0b1111) << 1),
                         12);
 
   if (branch_type == 0b000) {
@@ -131,95 +132,150 @@ void DecodeBranch(WordType ins_reg, InsType &ins) {
   }
 }
 
-void DecodeOther(WordType ins_reg, InsType &ins) {
-  int opcode_num = ins_reg & 0b1111111;
-  ins.rd_ = ins_reg >> 7 & 0b11111;
+void DecodeOther(WordType input_ins, InsType &ins) {
+  int opcode_num = input_ins & 0b1111111;
+  ins.rd_ = input_ins >> 7 & 0b11111;
   if (opcode_num == 0b1101111) {
     ins.opcode_ = Opcode::JAL;
-    ins.imm_ = SignExtend(((ins_reg >> 31 & 0b1) << 20) + ((ins_reg >> 12 & 0b111111111111) << 12) +
-                              ((ins_reg >> 20 & 0b1) << 11) + ((ins_reg >> 21 & 0b1111111111) << 1),
+    ins.imm_ = SignExtend(((input_ins >> 31 & 0b1) << 20) + ((input_ins >> 12 & 0b111111111111) << 12) +
+                              ((input_ins >> 20 & 0b1) << 11) + ((input_ins >> 21 & 0b1111111111) << 1),
                           20);
   } else if (opcode_num == 0b1100111) {
     ins.opcode_ = Opcode::JALR;
-    ins.rs1_ = ins_reg >> 15 & 0b11111;
-    ins.imm_ = SignExtend(ins_reg >> 20, 11);
+    ins.rs1_ = input_ins >> 15 & 0b11111;
+    ins.imm_ = SignExtend(input_ins >> 20, 11);
   } else if (opcode_num == 0b0010111) {
     ins.opcode_ = Opcode::AUIPC;
-    ins.imm_ = SignExtend((ins_reg >> 12) << 12, 31);
+    ins.imm_ = SignExtend((input_ins >> 12) << 12, 31);
   } else if (opcode_num == 0b0110111) {
     ins.opcode_ = Opcode::LUI;
-    ins.imm_ = SignExtend((ins_reg >> 12) << 12, 31);
+    ins.imm_ = SignExtend((input_ins >> 12) << 12, 31);
   } else {
     throw std::exception();
   }
 }
 
-void Decode(WordType ins_reg, InsType &ins) {
-  int opcode_num = ins_reg & 0b1111111;
+void Decode(WordType input_ins, InsType &ins) {
+  int opcode_num = input_ins & 0b1111111;
   if (opcode_num == 0b0000011) {
     ins.opcode_type_ = OpcodeType::LOAD;
-    DecodeLoad(ins_reg, ins);
+    DecodeLoad(input_ins, ins);
     return;
   }
   if (opcode_num == 0b0100011) {
     ins.opcode_type_ = OpcodeType::STORE;
-    DecodeStore(ins_reg, ins);
+    DecodeStore(input_ins, ins);
     return;
   }
   if (opcode_num == 0b0010011) {
     ins.opcode_type_ = OpcodeType::ARITHI;
-    DecodeArithI(ins_reg, ins);
+    DecodeArithI(input_ins, ins);
     return;
   }
   if (opcode_num == 0b0110011) {
     ins.opcode_type_ = OpcodeType::ARITHR;
-    DecodeArithR(ins_reg, ins);
+    DecodeArithR(input_ins, ins);
     return;
   }
   if (opcode_num == 0b1100011) {
     ins.opcode_type_ = OpcodeType::BRANCH;
-    DecodeBranch(ins_reg, ins);
+    DecodeBranch(input_ins, ins);
     return;
   }
   ins.opcode_type_ = OpcodeType::OTHER;
-  DecodeOther(ins_reg, ins);
+  DecodeOther(input_ins, ins);
 }
 
-void InstructionUnit::FetchDecode(Simulator &current_state, WordType ins_reg) {
+void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordType input_ins) {
   InsType ins;
-  if (ins_queue_.full() || current_state.stall_) {
+  ins.ins_addr_ = current_state->pc_;
+  if (current_state->ins_queue_full_ || current_state->stall_) {
     return;
   }
-  if (ins_reg == 0x0ff00513) {
-    current_state.stall_ = true;
-    return;
+  if (input_ins == 0x0ff00513) {
+    next_state->stall_ = true;
   }
-  Decode(ins_reg, ins);
-  ins_queue_.push(ins);
-  current_state.pc_ += 4;
+  Decode(input_ins, ins);
+  if (ins.opcode_type_ == OpcodeType::BRANCH) {
+    if (predictor_.GetPredictResult(current_state->pc_)) {
+      next_state->pc_ = current_state->pc_ + ins.imm_;
+    } else {
+      next_state->pc_ = current_state->pc_ + 4;
+    }
+  } else if (ins.opcode_ == AUIPC) {
+    next_state->pc_ = current_state->pc_ + ins.imm_;
+    return;
+  } else if (ins.opcode_ == LUI) {
+    ins = {ARITHI, ADDI, 0, -1, ins.rd_, ins.imm_, ins.ins_addr_};
+  } else if (ins.opcode_ == JAL) {
+    ins = {ARITHI, ADDI, 0, -1, ins.rd_, static_cast<int>(current_state->pc_ + 4), ins.ins_addr_};
+    next_state->pc_ = current_state->pc_ + ins.imm_;
+  } else if (ins.opcode_ == JALR) {
+    next_state->stall_ = true;
+  }
+  next_state->ins_reg_ = {true, ins};
 }
 
-void InstructionUnit::Issue(Simulator &current_state) {
-  if (ins_queue_.empty() || current_state.rob_full_) {
+void InstructionUnit::Issue(State *current_state, State *next_state) {
+  if (!current_state->ins_reg_.first || current_state->rob_full_) {
     return;
   }
-  InsType ins = ins_queue_.front();
+  InsType ins = current_state->ins_reg_.second;
+  RobEntry next_rob_entry{ins, InsState::Commit, ins.ins_addr_, ins.rd_};
+  RssEntry next_rss_entry{ins, next_state->rob_tail_ = current_state->rob_tail_ + 1, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
-    if (current_state.rss_ls_full_) {
+    if (current_state->ls_full_) {
+      next_state->rob_tail_--;
       return;
     }
-    RobEntry next_entry{ins, InsState::Commit};
-    if (ins.opcode_type_ == OpcodeType::LOAD) {
-      next_entry.dest_ = ins.rd_;
-      next_entry.dest_offset_ = 0;
+    if (ins.opcode_type_ == OpcodeType::STORE) {
+      next_rob_entry.dest_offset_ = ins.imm_;
+      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
+        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
+      } else {
+        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
+      }
+      if (current_state->reg_file_.regs_[ins.rs2_].dependency_ == -1) {
+        next_rss_entry.v2_ = current_state->reg_file_.regs_[ins.rs2_].data_;
+      } else {
+        next_rss_entry.q2_ = current_state->reg_file_.regs_[ins.rs2_].dependency_;
+      }
+    } else if (ins.opcode_type_== OpcodeType::LOAD) {
+      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
+        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
+      } else {
+        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
+      }
     } else {
-      next_entry.dest_ = -1;
-      next_entry.dest_offset_ = ins.imm_;
+      throw std::exception();
     }
   } else {
-    if (current_state.rss_arith_full_) {
+    if (current_state->arith_full_) {
+      next_state->rob_tail_--;
       return;
     }
+    if (ins.opcode_type_ == OpcodeType::ARITHI || ins.opcode_ == Opcode::JALR) {
+      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
+        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
+      } else {
+        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
+      }
+    } else if (ins.opcode_type_ == OpcodeType::ARITHR || ins.opcode_type_ == OpcodeType::BRANCH) {
+      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
+        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
+      } else {
+        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
+      }
+      if (current_state->reg_file_.regs_[ins.rs2_].dependency_ == -1) {
+        next_rss_entry.v2_ = current_state->reg_file_.regs_[ins.rs2_].data_;
+      } else {
+        next_rss_entry.q2_ = current_state->reg_file_.regs_[ins.rs2_].dependency_;
+      }
+    } else {
+      throw std::exception();
+    }
   }
+  next_state->rob_entry_ = {true, next_rob_entry};
+  next_state->rss_entry_ = {true, next_rss_entry};
 }
 }  // namespace conless
