@@ -1,0 +1,3 @@
+[submodule "test/rv-test"]
+	path = test/rv-test
+	url = https://kgithub.com/zsq259/RISC-V.git
