@@ -217,7 +217,7 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
 }
 
 void InstructionUnit::Issue(State *current_state, State *next_state) {
-  if (!current_state->ins_reg_.first || current_state->rob_full_) {
+  if (ins_queue_.empty() || current_state->rob_full_) {
     return;
   }
   InsType ins = current_state->ins_reg_.second;
@@ -277,5 +277,15 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
   }
   next_state->rob_entry_ = {true, next_rob_entry};
   next_state->rss_entry_ = {true, next_rss_entry};
+}
+
+void InstructionUnit::Flush(State *current_state) {
+  if (current_state->ins_reg_.first) {
+    if (ins_queue_.full()) {
+      throw std::exception();
+    }
+    ins_queue_.push(current_state->ins_reg_.second);
+  }
+  current_state->ins_queue_full_ = ins_queue_.full();
 }
 }  // namespace conless

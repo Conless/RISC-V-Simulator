@@ -19,20 +19,21 @@ struct State {
   AddrType pc_{0};
   bool stall_{false};
 
-  bool ins_queue_full_{false};
-  std::pair<bool, InsType> ins_reg_{false, InsType{}};
+  bool ins_queue_full_{false}; // flush by iu at the beginning of this cycle
+  std::pair<bool, InsType> ins_reg_{false, InsType{}}; // edit by FetchDecode in last cycle
 
-  bool rob_full_{false};
-  int rob_tail_{0};
-  std::pair<bool, RobEntry> rob_entry_{false, RobEntry()};
+  bool rob_full_{false}; // flush by rob at the beginning of this cycle
+  int rob_tail_{0}; 
+  std::pair<bool, RobEntry> rob_entry_{false, RobEntry()}; // edit by Issue in last cycle
 
-  bool arith_full_{false}, ls_full_{false};
-  std::pair<bool, RssEntry> rss_entry_{false, RssEntry()};
+  bool arith_full_{false}, ls_full_{false}; // flush by rss at the beginning of this cycle
+  std::pair<bool, RssEntry> rss_entry_{false, RssEntry()}; // edit by Execute in last cycle
 
-  bool load_full_{false}, st_full_{false}, st_req_{false};
-  std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()};
-  
-  RegisterFile reg_file_;
+  bool load_full_{false}, st_full_{false}, st_req_{false}; // flush by lsb at the beginning of this cycle
+  std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()}; // edit by LoadStore in last cycle
+
+  // Flush in simulator
+  RegisterFile reg_file_; // edit by Commit in last cycle
 };
 
 class Simulator {
@@ -51,6 +52,8 @@ class Simulator {
   Memory *memory_;
   InstructionUnit *ins_unit_;
   ReorderBuffer *ro_buffer_;
+  ReservationStation *rs_station_;
+  LoadStoreBuffer *ls_buffer_;
   State *current_state_, *next_state_;
 };
 
