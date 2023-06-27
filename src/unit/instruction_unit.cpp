@@ -222,10 +222,9 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
   }
   InsType ins = current_state->ins_reg_.second;
   RobEntry next_rob_entry{ins, InsState::Commit, ins.ins_addr_, ins.rd_};
-  RssEntry next_rss_entry{ins, next_state->rob_tail_ = current_state->rob_tail_ + 1, ins.imm_};
+  RssEntry next_rss_entry{ins, current_state->rob_tail_, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
     if (current_state->ls_full_) {
-      next_state->rob_tail_--;
       return;
     }
     if (ins.opcode_type_ == OpcodeType::STORE) {
@@ -251,7 +250,6 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
     }
   } else {
     if (current_state->arith_full_) {
-      next_state->rob_tail_--;
       return;
     }
     if (ins.opcode_type_ == OpcodeType::ARITHI || ins.opcode_ == Opcode::JALR) {

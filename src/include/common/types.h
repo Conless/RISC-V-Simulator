@@ -65,6 +65,7 @@ struct InsType {
   Opcode opcode_;
   int rs1_{-1}, rs2_{-1}, rd_{-1};
   int imm_{-1};
+  AddrType ins_addr_;
 };
 
 }  // namespace conless

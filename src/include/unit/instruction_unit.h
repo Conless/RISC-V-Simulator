@@ -13,6 +13,7 @@ class InstructionUnit {
  public:
   void FetchDecode(State *current_state, State *next_state, WordType input_ins);
   void Issue(State *current_state, State *next_state);
+  void Flush(State *current_state);
 
  private:
   PredictUnit predictor_;
