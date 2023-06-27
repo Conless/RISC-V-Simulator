@@ -3,20 +3,22 @@
 
 #include "common/types.h"
 #include "container/circular_queue.h"
+#include "unit/predict_unit.h"
 
 namespace conless {
 
-class Simulator;
+class State;
 
 class InstructionUnit {
  public:
-  void FetchDecode(Simulator &current_state, WordType ins_reg);
-  void Issue(Simulator &current_state);
+  void FetchDecode(State *current_state, State *next_state, WordType input_ins);
+  void Issue(State *current_state, State *next_state);
 
  private:
+  PredictUnit predictor_;
   circular_queue<InsType> ins_queue_;
 };
 
-}
+}  // namespace conless
 
 #endif
