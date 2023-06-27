@@ -7,6 +7,7 @@
 #include "common/types.h"
 #include "storage/memory.h"
 
+#include "unit/arithmetic_logic_unit.h"
 #include "unit/instruction_unit.h"
 #include "unit/register_file.h"
 #include "unit/reorder_buffer.h"
@@ -27,7 +28,9 @@ struct State {
   std::pair<bool, RobEntry> rob_entry_{false, RobEntry()}; // edit by Issue in last cycle
 
   bool arith_full_{false}, ls_full_{false}; // flush by rss at the beginning of this cycle
-  std::pair<bool, RssEntry> rss_entry_{false, RssEntry()}; // edit by Execute in last cycle
+  std::pair<bool, RssEntry> rss_entry_{false, RssEntry()};  // edit by Execute in last cycle
+
+  std::pair<bool, AluEntry> alu_entry_{false, AluEntry()};
 
   bool load_full_{false}, st_full_{false}, st_req_{false}; // flush by lsb at the beginning of this cycle
   std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()}; // edit by LoadStore in last cycle

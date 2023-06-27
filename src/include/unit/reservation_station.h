@@ -2,20 +2,33 @@
 #define RESERVATION_STATION_H
 
 #include "common/types.h"
-#include "container/circular_queue.h"
+#include "common/config.h"
+#include "container/array.h"
+
+#include "storage/bus.h"
 
 namespace conless {
+
 struct RssEntry {
   InsType ins_;
   int rob_pos_;
-  int v1_, v2_;
-  int q1_, q2_;
-  int num_;
-  int dest_;
+  int num_{0};
+  int v1_{0}, v2_{0}; 
+  int q1_{-1}, q2_{-1};
 };
+
+class State;
+
 class ReservationStation {
+ public:
+  void Flush(State *current_state);
+  void MonitorBus();
+  void ExecuteArith();
+  void ExecuteLoadStore();
  private:
-  circular_queue<RssEntry> ls_entries_, arith_entries_;
+  array<RssEntry, MAX_RSS_SIZE> ls_entries_;
+  array<RssEntry, MAX_RSS_SIZE> arith_entries_;
+  Bus *cd_bus_;
 };
 }  // namespace conless
 

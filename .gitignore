@@ -2,3 +2,4 @@ docs/tutorials
 tmp/
 .cache/
 build/
+.vscode/
