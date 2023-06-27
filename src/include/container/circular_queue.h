@@ -3,50 +3,48 @@
 
 #include <exception>
 #include <iterator>
-
 #include "common/config.h"
-#include "common/types.h"
 
 namespace conless {
 
-template <class T>
+template <class T, int SIZE = MAX_QUEUE_SIZE>
 class circular_queue {  // NOLINT
   using value_type = T;
 
  public:
   auto push(const T &data) -> bool {  // NOLINT
-    if (size() == MAX_QUEUE_SIZE) {
+    if (size() == SIZE) {
       return false;
     }
-    queue_[(++tail_) % MAX_QUEUE_SIZE] = data;
+    queue_[(++tail_) % SIZE] = data;
     return true;
   }
   auto pop() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
-    return queue_[(head_++) % MAX_QUEUE_SIZE];
+    return queue_[(head_++) % SIZE];
   }
   auto front() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
-    return queue_[head_ % MAX_QUEUE_SIZE];
+    return queue_[head_ % SIZE];
   }
   auto back() -> const T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
-    return queue_[tail_ % MAX_QUEUE_SIZE];
+    return queue_[tail_ % SIZE];
   }
-  auto operator[](const size_t &pos) -> T & { return queue_[pos % MAX_QUEUE_SIZE]; }
+  auto operator[](const size_t &pos) -> T & { return queue_[pos % SIZE]; }
 
  public:
   auto head() -> int { return head_; }                      // NOLINT
   auto tail() -> int { return tail_; }                      // NOLINT
   auto size() -> size_t { return tail_ - head_ + 1; }       // NOLINT
   auto empty() -> bool { return head_ > tail_; }            // NOLINT
-  auto full() -> bool { return size() == MAX_QUEUE_SIZE; }  // NOLINT
+  auto full() -> bool { return size() == SIZE; }  // NOLINT
 
  public:
   template <bool const_tag>
@@ -56,34 +54,34 @@ class circular_queue {  // NOLINT
     friend class base_iterator<false>;
 
    private:
-    const circular_queue<T> *iter_{nullptr};
+    circular_queue<T, SIZE> *iter_{nullptr};
     int pos_{-1};
 
    public:
     using difference_type = std::ptrdiff_t;
-    using value_type = typename circular_queue<T>::value_type;
+    using value_type = typename circular_queue<T, SIZE>::value_type;
     using iterator_category = std::output_iterator_tag;
     using pointer = typename std::conditional<const_tag, const value_type *, value_type *>::type;
     using reference = typename std::conditional<const_tag, const value_type &, value_type &>::type;
 
     base_iterator() = default;
-    base_iterator(const circular_queue<T> *iter, int pos) : iter_(iter), pos_(pos) {}
+    base_iterator(circular_queue<T, SIZE> *iter, int pos) : iter_(iter), pos_(pos) {}
     template <bool _const_tag>
     explicit base_iterator(const base_iterator<_const_tag> &other) : iter_(other.iter_), pos_(other.pos_) {}
 
     auto operator++(int) -> base_iterator {
-      if (pos_ == iter_->tail_) {
+      if (*this == iter_->end()) {
         throw std::exception();
       }
       base_iterator cp = *this;
-      pos_ = (pos_ + 1) % MAX_QUEUE_SIZE;
+      pos_ = (pos_ + 1) % SIZE;
       return cp;
     }
     auto operator++() -> base_iterator & {
-      if (pos_ == iter_->tail_) {
+      if (*this == iter_->end()) {
         throw std::exception();
       }
-      pos_ = (pos_ - 1) % MAX_QUEUE_SIZE;
+      pos_ = (pos_ + 1) % SIZE;
       return *this;
     }
 
@@ -96,8 +94,8 @@ class circular_queue {  // NOLINT
       return iter_ != rhs.iter_ || pos_ != rhs.pos_;
     }
 
-    auto operator*() const -> reference { return iter_->queue_[pos_ % MAX_QUEUE_SIZE]; }
-    auto operator->() const -> pointer { return &this->queue_[pos_ % MAX_QUEUE_SIZE]; }
+    auto operator*() const -> reference { return iter_->queue_[pos_ % SIZE]; }
+    auto operator->() const -> pointer { return &this->queue_[pos_ % SIZE]; }
   };
 
   using iterator = base_iterator<false>;
@@ -120,7 +118,7 @@ class circular_queue {  // NOLINT
  private:
   int head_{0};
   int tail_{-1};
-  T queue_[MAX_QUEUE_SIZE];
+  T queue_[SIZE];
 };
 
 }  // namespace conless
