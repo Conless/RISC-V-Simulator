@@ -1,27 +1,36 @@
 #ifndef REORDER_BUFFER_H
 #define REORDER_BUFFER_H
 
+#include "common/types.h"
 #include "container/circular_queue.h"
 
 namespace conless {
 
-enum InsState { Issue, Exec, Write, Commit };
+enum RobState { Issue, Exec, Write, Commit };
 
 struct RobEntry {
   InsType ins_;
-  InsState state_;
-  int dest_;
-  int dest_offset_;
-  int value_;
+  RobState state_;
+  AddrType ins_addr_;
+  int dest_{-1};
+  int value_{0};
 };
+
+class State;
+class Bus;
 
 class ReorderBuffer {
  public:
-  void MonitorCdb();
-  void Commit();
+  void Flush(State *current_state);
+  void Execute(State *current_state, State *next_state);
 
-//  private:
+ protected:
+  void MonitorCdb();
+  void Commit(State *current_state, State *next_state);
+
+ private:
   circular_queue<RobEntry> entries_;
+  Bus *cd_bus_;
 };
 
 }  // namespace conless

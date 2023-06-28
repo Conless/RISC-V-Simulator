@@ -7,7 +7,7 @@ namespace conless {
 
 class PredictUnit {
  public:
-  auto GetPredictResult(AddrType pc) -> bool;
+  auto GetPredictResult(AddrType pc) -> bool { return true; }
 };
 
 }

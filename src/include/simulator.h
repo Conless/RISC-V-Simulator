@@ -2,9 +2,11 @@
 #define SIMULATOR_H
 
 #include <iostream>
+#include <queue>
 
 #include "common/config.h"
 #include "common/types.h"
+#include "container/circular_queue.h"
 #include "storage/memory.h"
 
 #include "unit/arithmetic_logic_unit.h"
@@ -34,7 +36,7 @@ struct State {
   std::pair<bool, AluEntry> alu_entry_{false, AluEntry()};
 
   bool load_full_{false}, st_full_{false};  // flush by lsb at the beginning of this cycle
-  int st_req_{0}; // edit by Commit in last cycle
+  circular_queue<int, 4> st_req_;
   std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()}; // edit by LoadStore in last cycle
 
   RegisterFile reg_file_; // edit by Commit in last cycle

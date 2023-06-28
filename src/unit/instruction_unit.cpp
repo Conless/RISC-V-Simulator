@@ -196,22 +196,27 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
     next_state->stall_ = true;
   }
   Decode(input_ins, ins);
+  if (ins.opcode_ == AUIPC) {
+    next_state->pc_ = current_state->pc_ + ins.imm_;
+    return;
+  }
   if (ins.opcode_type_ == OpcodeType::BRANCH) {
-    if (predictor_.GetPredictResult(current_state->pc_)) {
+    ins.rd_ = static_cast<int>(predictor_.GetPredictResult(current_state->pc_));
+    if (ins.rd_ != 0) {
       next_state->pc_ = current_state->pc_ + ins.imm_;
     } else {
       next_state->pc_ = current_state->pc_ + 4;
     }
-  } else if (ins.opcode_ == AUIPC) {
-    next_state->pc_ = current_state->pc_ + ins.imm_;
-    return;
-  } else if (ins.opcode_ == LUI) {
-    ins = {ARITHI, ADDI, 0, -1, ins.rd_, ins.imm_, ins.ins_addr_};
   } else if (ins.opcode_ == JAL) {
     ins = {ARITHI, ADDI, 0, -1, ins.rd_, static_cast<int>(current_state->pc_ + 4), ins.ins_addr_};
     next_state->pc_ = current_state->pc_ + ins.imm_;
   } else if (ins.opcode_ == JALR) {
-    next_state->stall_ = true;
+      next_state->stall_ = true;
+  } else {
+    if (ins.opcode_ == LUI) {
+      ins = {ARITHI, ADDI, 0, -1, ins.rd_, ins.imm_, ins.ins_addr_};
+    }
+    next_state->pc_ = current_state->pc_ + 4;
   }
   next_state->ins_reg_ = {true, ins};
 }
@@ -221,14 +226,13 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
     return;
   }
   InsType ins = current_state->ins_reg_.second;
-  RobEntry next_rob_entry{ins, InsState::Commit, ins.ins_addr_, ins.rd_};
+  RobEntry next_rob_entry{ins, RobState::Commit, ins.ins_addr_, ins.rd_};
   RssEntry next_rss_entry{ins, current_state->rob_tail_, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
     if (current_state->ls_full_) {
       return;
     }
     if (ins.opcode_type_ == OpcodeType::STORE) {
-      next_rob_entry.dest_offset_ = ins.imm_;
       if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
         next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
       } else {
@@ -286,4 +290,10 @@ void InstructionUnit::Flush(State *current_state) {
   }
   current_state->ins_queue_full_ = ins_queue_.full();
 }
+
+void InstructionUnit::Execute(State *current_state, State *next_state) {
+  FetchDecode(current_state, next_state, current_state->input_ins_);
+  Issue(current_state, next_state);
+}
+
 }  // namespace conless

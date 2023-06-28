@@ -63,7 +63,8 @@ enum Opcode {
 struct InsType {
   OpcodeType opcode_type_;
   Opcode opcode_;
-  int rs1_{-1}, rs2_{-1}, rd_{-1};
+  int rs1_{-1}, rs2_{-1};
+  int rd_{-1}; // Also stores the prediction result
   int imm_{-1};
   AddrType ins_addr_;
 };

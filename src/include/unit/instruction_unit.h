@@ -11,9 +11,12 @@ class State;
 
 class InstructionUnit {
  public:
+  void Flush(State *current_state);
+  void Execute(State *current_state, State *next_state);
+
+ protected:
   void FetchDecode(State *current_state, State *next_state, WordType input_ins);
   void Issue(State *current_state, State *next_state);
-  void Flush(State *current_state);
 
  private:
   PredictUnit predictor_;
