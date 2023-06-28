@@ -2,6 +2,7 @@
 #include <exception>
 #include <iostream>
 #include <string>
+#include "storage/bus.h"
 
 namespace conless {
 
@@ -143,6 +144,47 @@ auto InsToString(InsType ins) -> std::string {
     s += "->" + std::to_string(ins.rd_);
   }
   return s;
+}
+
+auto RobStateToString(RobState state) -> std::string {
+  if (state == RobState::Issue) {
+    return "Issue";
+  }
+  if (state == RobState::Exec) {
+    return "Exec";
+  }
+  if (state == RobState::Side) {
+    return "Side";
+  }
+  if (state == RobState::Write) {
+    return "Write";
+  }
+  throw std::exception();
+}
+
+auto BusTypeToString(BusType type) -> std::string {
+  if (type == BusType::Executing) {
+    return "Executing";
+  }
+  if (type == BusType::LoadFinish) {
+    return "LoadFinish";
+  }
+  if (type == BusType::LoadRequest) {
+    return "LoadRequest";
+  }
+  if (type == BusType::StoreRequest) {
+    return "StoreRequest";
+  }
+  if (type == BusType::StoreFinish) {
+    return "StoreFinish";
+  }
+  if (type == BusType::SideChannel) {
+    return "SideChannel";
+  }
+  if (type == BusType::WriteBack) {
+    return "WriteBack";
+  }
+  throw std::exception();
 }
 
 }  // namespace conless
