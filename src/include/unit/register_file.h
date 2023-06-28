@@ -10,8 +10,7 @@ struct Register {
   int dependency_{-1};
 };
 
-class RegisterFile {
- private:
+struct RegisterFile {
   Register regs_[REG_FILE_SIZE];
 };
 

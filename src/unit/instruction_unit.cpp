@@ -5,16 +5,9 @@
 #include "simulator.h"
 #include "unit/reorder_buffer.h"
 #include "unit/reservation_station.h"
+#include "utils/utils.h"
 
 namespace conless {
-
-auto SignExtend(uint32_t imm, uint8_t length) -> int {
-  if ((imm >> length & 1) == 0) {
-    return static_cast<int>(imm);
-  }
-  auto base_num = static_cast<uint32_t>(-1) << length;
-  return imm | base_num;
-}
 
 void DecodeLoad(WordType input_ins, InsType &ins) {
   int load_type = input_ins >> 12 & 0b11;
@@ -226,7 +219,7 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
     return;
   }
   InsType ins = current_state->ins_reg_.second;
-  RobEntry next_rob_entry{ins, RobState::Commit, ins.ins_addr_, ins.rd_};
+  RobEntry next_rob_entry{ins, RobState::Issue, ins.ins_addr_, ins.rd_};
   RssEntry next_rss_entry{ins, current_state->rob_tail_, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
     if (current_state->ls_full_) {

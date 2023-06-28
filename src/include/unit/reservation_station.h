@@ -25,7 +25,7 @@ class ReservationStation {
   void Execute(State *current_state, State *next_state);
 
  protected:
-  void MonitorBus();
+  void MonitorCdb();
   void ExecuteArith(State *current_state, State *next_state);
   void ExecuteLoadStore(State *current_state, State *next_state);
  private:

@@ -34,9 +34,9 @@ void ReservationStation::Execute(State *current_state, State *next_state) {
   ExecuteLoadStore(current_state, next_state);
 }
 
-void ReservationStation::MonitorBus() {
+void ReservationStation::MonitorCdb() {
   for (auto bus_entry : cd_bus_->entries_) {
-    std::pair<int, int> dep_data = {bus_entry.second.rob_pos_, bus_entry.second.data_};
+    std::pair<int, int> dep_data = {bus_entry.second.pos_, bus_entry.second.data_};
     for (auto entry : arith_entries_) {
       if (entry.second.v1_ == dep_data.first) {
         entry.second.q1_ = dep_data.second;
@@ -106,12 +106,12 @@ void ReservationStation::ExecuteLoadStore(State *current_state, State *next_stat
                        entry.ins_.opcode_ != Opcode::LBU && entry.ins_.opcode_ != Opcode::LHU};
     BusEntry bus_entry{BusType::Executing, entry.rob_pos_, 0};
     if (entry.ins_.opcode_ == Opcode::LB || entry.ins_.opcode_ == Opcode::LBU || entry.ins_.opcode_ == Opcode::SB) {
-      lsb_entry.end_addr_ = lsb_entry.start_addr_;
+      lsb_entry.length_ = 1;
     } else if (entry.ins_.opcode_ == Opcode::LH || entry.ins_.opcode_ == Opcode::LHU ||
                entry.ins_.opcode_ == Opcode::SH) {
-      lsb_entry.end_addr_ = lsb_entry.start_addr_ + 1;
+      lsb_entry.length_ = 2;
     } else if (entry.ins_.opcode_ == Opcode::LW || entry.ins_.opcode_ == Opcode::SW) {
-      lsb_entry.end_addr_ = lsb_entry.start_addr_ + 3;
+      lsb_entry.length_ = 4;
     }
     next_state->lsb_entry_ = {true, lsb_entry};
     int space = cd_bus_->entries_.space();

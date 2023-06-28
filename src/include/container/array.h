@@ -137,10 +137,9 @@ class array {  // NOLINT
   auto end() -> iterator { return {this, SIZE}; }  // NOLINT
 
  private:
-  std::pair<bool, int> data_[SIZE];
+  std::pair<bool, T> data_[SIZE];
 };
 
-template class array<int, 10>;
 
 }  // namespace conless
 #endif

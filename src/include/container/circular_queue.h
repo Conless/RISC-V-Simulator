@@ -25,13 +25,14 @@ class circular_queue {  // NOLINT
     }
     return queue_[(head_++) % SIZE];
   }
-  auto front() -> const T & {  // NOLINT
+  void clean() { head_ = tail_ + 1; } // NOLINT
+  auto front() -> T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }
     return queue_[head_ % SIZE];
   }
-  auto back() -> const T & {  // NOLINT
+  auto back() -> T & {  // NOLINT
     if (empty()) {
       throw std::exception();
     }

@@ -3,9 +3,6 @@
 
 namespace conless {
 
-struct BusEntry {};
-
-class Bus {};
 
 }
 #endif

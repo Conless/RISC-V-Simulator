@@ -6,7 +6,7 @@
 
 namespace conless {
 
-enum RobState { Issue, Exec, Write, Commit };
+enum RobState { Issue, Exec, Write, Side };
 
 struct RobEntry {
   InsType ins_;
