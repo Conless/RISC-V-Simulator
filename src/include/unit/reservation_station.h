@@ -21,6 +21,7 @@ class State;
 
 class ReservationStation {
  public:
+  explicit ReservationStation(Bus *cd_bus) : cd_bus_(cd_bus) {}
   void Flush(State *current_state);
   void Execute(State *current_state, State *next_state);
 

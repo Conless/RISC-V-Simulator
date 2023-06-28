@@ -130,7 +130,7 @@ void DecodeOther(WordType input_ins, InsType &ins) {
   ins.rd_ = input_ins >> 7 & 0b11111;
   if (opcode_num == 0b1101111) {
     ins.opcode_ = Opcode::JAL;
-    ins.imm_ = SignExtend(((input_ins >> 31 & 0b1) << 20) + ((input_ins >> 12 & 0b111111111111) << 12) +
+    ins.imm_ = SignExtend(((input_ins >> 31 & 0b1) << 20) + ((input_ins >> 12 & 0b11111111) << 12) +
                               ((input_ins >> 20 & 0b1) << 11) + ((input_ins >> 21 & 0b1111111111) << 1),
                           20);
   } else if (opcode_num == 0b1100111) {
@@ -189,6 +189,9 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
     next_state->stall_ = true;
   }
   Decode(input_ins, ins);
+#ifdef DEBUG
+
+#endif
   if (ins.opcode_ == AUIPC) {
     next_state->pc_ = current_state->pc_ + ins.imm_;
     return;
@@ -201,10 +204,10 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
       next_state->pc_ = current_state->pc_ + 4;
     }
   } else if (ins.opcode_ == JAL) {
-    ins = {ARITHI, ADDI, 0, -1, ins.rd_, static_cast<int>(current_state->pc_ + 4), ins.ins_addr_};
     next_state->pc_ = current_state->pc_ + ins.imm_;
+    ins = {ARITHI, ADDI, 0, -1, ins.rd_, static_cast<int>(current_state->pc_ + 4), ins.ins_addr_};
   } else if (ins.opcode_ == JALR) {
-      next_state->stall_ = true;
+    next_state->stall_ = true;
   } else {
     if (ins.opcode_ == LUI) {
       ins = {ARITHI, ADDI, 0, -1, ins.rd_, ins.imm_, ins.ins_addr_};
@@ -218,7 +221,7 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
   if (ins_queue_.empty() || current_state->rob_full_) {
     return;
   }
-  InsType ins = current_state->ins_reg_.second;
+  InsType ins = ins_queue_.front();
   RobEntry next_rob_entry{ins, RobState::Issue, ins.ins_addr_, ins.rd_};
   RssEntry next_rss_entry{ins, current_state->rob_tail_, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
@@ -236,7 +239,7 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
       } else {
         next_rss_entry.q2_ = current_state->reg_file_.regs_[ins.rs2_].dependency_;
       }
-    } else if (ins.opcode_type_== OpcodeType::LOAD) {
+    } else if (ins.opcode_type_ == OpcodeType::LOAD) {
       if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
         next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
       } else {
@@ -270,6 +273,7 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
       throw std::exception();
     }
   }
+  ins_queue_.pop();
   next_state->rob_entry_ = {true, next_rob_entry};
   next_state->rss_entry_ = {true, next_rss_entry};
 }
@@ -280,6 +284,10 @@ void InstructionUnit::Flush(State *current_state) {
       throw std::exception();
     }
     ins_queue_.push(current_state->ins_reg_.second);
+#ifdef DEBUG
+    printf("Instruction queue receives: ");
+    DisplayIns(current_state->ins_reg_.second);
+#endif
   }
   current_state->ins_queue_full_ = ins_queue_.full();
 }

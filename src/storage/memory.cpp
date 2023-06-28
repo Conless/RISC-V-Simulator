@@ -30,6 +30,9 @@ void Memory::Flush(State *current_state) {
       counter_ = 3;
     }
   }
+#ifdef DEBUG
+  printf("Memory counter: %d\n", counter_);
+#endif
 }
 
 auto Memory::FetchWordUnsafe(AddrType pos) -> WordType {
@@ -73,6 +76,5 @@ void Memory::Execute(State *current_state, State *next_state) {
     }
   }
 }
-
 
 }  // namespace conless

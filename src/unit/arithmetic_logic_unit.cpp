@@ -13,10 +13,14 @@ void ArithmeticLogicUnit::Flush(State *current_state) {
       throw std::exception();
     }
     entries_.push(current_state->alu_entry_.second);
+#ifdef DEBUG
+    printf("ALU receives: ");
+    
+#endif
   }
 }
 
-void ArithmeticLogicUnit::Execute() {
+void ArithmeticLogicUnit::Execute(State *current_state, State *next_state) {
   if (entries_.empty()) {
     return;
   }

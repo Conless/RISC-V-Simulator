@@ -3,6 +3,7 @@
 #include "common/types.h"
 #include "simulator.h"
 #include "storage/bus.h"
+#include "utils/utils.h"
 
 namespace conless {
 
@@ -15,10 +16,19 @@ void ReorderBuffer::Flush(State *current_state) {
     if (entries_.full()) {
       throw std::exception();
     }
+#ifdef DEBUG
+    printf("Reorder buffer receives: ");
+    DisplayIns(current_state->rob_entry_.second.ins_);
+#endif
     entries_.push(current_state->rob_entry_.second);
   }
   current_state->rob_full_ = entries_.full();
   current_state->rob_tail_ = entries_.tail() + 1;
+  MonitorCdb();
+}
+
+void ReorderBuffer::Execute(State *current_state, State *next_state) {
+  Commit(current_state, next_state);
 }
 
 void ReorderBuffer::MonitorCdb() {

@@ -51,13 +51,18 @@ class Simulator {
   auto Run() -> ReturnType;
 
  protected:
+  void Display();
   void Flush();
 
  private:
+  int clock_{0};
+  Bus *cd_bus_;
+  Bus *mem_bus_;
   Memory *memory_;
   InstructionUnit *ins_unit_;
   ReorderBuffer *ro_buffer_;
   ReservationStation *rs_station_;
+  ArithmeticLogicUnit *arith_logic_unit_;
   LoadStoreBuffer *ls_buffer_;
   State *current_state_, *next_state_;
 };

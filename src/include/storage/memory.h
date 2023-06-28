@@ -11,6 +11,7 @@ class State;
 
 class Memory {
  public:
+  explicit Memory(Bus *mem_bus) : mem_bus_(mem_bus) {}
   void Init();
   void Flush(State *current_state);
   void Execute(State *current_state, State *next_state);

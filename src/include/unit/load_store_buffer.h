@@ -20,6 +20,7 @@ class State;
 
 class LoadStoreBuffer {
  public:
+  LoadStoreBuffer(Bus *mem_bus, Bus *cd_bus) : mem_bus_(mem_bus), cd_bus_(cd_bus) {}
   void Flush(State *current_state);
   void Execute(State *current_state, State *next_state);
 

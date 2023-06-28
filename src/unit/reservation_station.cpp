@@ -5,6 +5,7 @@
 #include "simulator.h"
 #include "storage/bus.h"
 #include "unit/arithmetic_logic_unit.h"
+#include "utils/utils.h"
 
 namespace conless {
 
@@ -24,9 +25,14 @@ void ReservationStation::Flush(State *current_state) {
       }
       arith_entries_[space] = current_state->rss_entry_.second;
     }
+#ifdef DEBUG
+    printf("Reservation station receives: ");
+    DisplayIns(current_state->rss_entry_.second.ins_);
+#endif
   }
   current_state->ls_full_ = ls_entries_.full();
   current_state->arith_full_ = arith_entries_.full();
+  MonitorCdb();
 }
 
 void ReservationStation::Execute(State *current_state, State *next_state) {

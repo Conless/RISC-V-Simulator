@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define DEBUG
+
 namespace conless {
 
 constexpr int MAX_QUEUE_SIZE = 32;

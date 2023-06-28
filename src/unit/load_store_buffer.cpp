@@ -41,6 +41,7 @@ void LoadStoreBuffer::Flush(State *current_state) {
       throw std::exception();
     }
   }
+  MonitorMemb();
 }
 
 void LoadStoreBuffer::MonitorMemb() {
@@ -99,6 +100,9 @@ void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
                                data >> 8 & 0b11111111};
       mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3), data & 0b11111111};
     }
+    return;
+  }
+  if (load_buffer_.empty()) {
     return;
   }
   auto &load_entry = load_buffer_.front();
