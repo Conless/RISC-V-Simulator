@@ -68,13 +68,13 @@ void LoadStoreBuffer::MonitorMemb() {
   }
   auto &memb_entry = mem_bus_->entries_[0];
   if (memb_entry.type_ == BusType::LoadFinish) {
-    auto store_entry = store_buffer_.pop();
+    auto load_entry = load_buffer_.pop();
     int data = mem_bus_->entries_[0].data_ + (mem_bus_->entries_[1].data_ << 8) + (mem_bus_->entries_[2].data_ << 16) +
                (mem_bus_->entries_[3].data_ << 24);
-    if (store_entry.signed_tag_) {
-      data = SignExtend(data, store_entry.length_ << 3);
+    if (load_entry.signed_tag_) {
+      data = SignExtend(data, (load_entry.length_ << 3) - 1);
     }
-    BusEntry bus_entry{BusType::WriteBack, store_entry.rob_pos_, memb_entry.data_};
+    BusEntry bus_entry{BusType::WriteBack, load_entry.rob_pos_, data};
     temp_bus_entries_.push(bus_entry);
     mem_bus_->entries_.clean();
   } else if (memb_entry.type_ == BusType::StoreFinish) {
@@ -105,18 +105,18 @@ void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
       mem_bus_->entries_.busy(3) = false;
     } else if (store_entry.length_ == 2) {
       mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_),
-                               data >> 8 & 0b11111111};
-      mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1), data & 0b11111111};
+                               data & 0b11111111};
+      mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1), data >> 8 & 0b11111111};
       mem_bus_->entries_.busy(2) = false;
       mem_bus_->entries_.busy(3) = false;
     } else if (store_entry.length_ == 4) {
       mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_),
-                               data >> 24 & 0b11111111};
+                               data & 0b11111111};
       mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1),
-                               data >> 16 & 0b11111111};
-      mem_bus_->entries_[2] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 2),
                                data >> 8 & 0b11111111};
-      mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3), data & 0b11111111};
+      mem_bus_->entries_[2] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 2),
+                               data >> 16 & 0b11111111};
+      mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3), data >> 24 & 0b11111111};
     }
     return;
   }

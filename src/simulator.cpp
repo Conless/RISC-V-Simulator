@@ -33,7 +33,7 @@ void Simulator::Init(AddrType pc) {
 }
 
 void Simulator::Display() {
-  printf("Clock cycle %d:\n\tcurrent pc: %x, Input instruction is %x\n\tStall status: %d, Clean status: %d\n", clock_,
+  printf("Clock cycle %d:\n\tCurrent pc: %x, Input instruction is %x\n\tStall status: %d, Clean status: %d\n", clock_,
          current_state_->pc_, current_state_->input_ins_, current_state_->stall_, current_state_->clean_);  // NOLINT
   printf("\tRegister file:\n");
   for (int i = 0; i < REG_FILE_SIZE; i++) {
@@ -41,16 +41,16 @@ void Simulator::Display() {
     if (reg.data_ == 0 && reg.dependency_ == -1) {
       continue;
     }
-    printf("\t\tRegs[%d]: %d (%d)\n", i, reg.data_, reg.dependency_);
+    printf("\t\tRegs[%d]: %x (%d)\n", i, reg.data_, reg.dependency_);
   }
   printf("\n");
   printf("\tCommon data bus:\n");
   for (auto entry : cd_bus_->entries_) {
-    printf("\t\t%-15s @%-9d (%d)\n", BusTypeToString(entry.second.type_).c_str(), entry.second.pos_, entry.second.data_);
+    printf("\t\t%-15s @%-9d (%x)\n", BusTypeToString(entry.second.type_).c_str(), entry.second.pos_, entry.second.data_);
   }
   printf("\tMemory bus:\n");
   for (auto entry : mem_bus_->entries_) {
-    printf("\t\t%-15s 0x%-8x (%d)\n", BusTypeToString(entry.second.type_).c_str(), entry.second.pos_, entry.second.data_);
+    printf("\t\t%-15s 0x%-8x (%x)\n", BusTypeToString(entry.second.type_).c_str(), entry.second.pos_, entry.second.data_);
   }
   printf("\n");
 }
@@ -59,6 +59,7 @@ void Simulator::Flush() {
   clock_++;
   delete current_state_;
   current_state_ = next_state_;
+  current_state_->reg_file_.regs_[0] = {0, -1};
   if (!current_state_->stall_) {
     current_state_->input_ins_ = memory_->FetchWordUnsafe(current_state_->pc_);
   }

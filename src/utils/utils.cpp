@@ -1,6 +1,7 @@
 #include "utils/utils.h"
 #include <exception>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "storage/bus.h"
 
@@ -129,6 +130,14 @@ auto OpcodeToString(Opcode opcode) -> std::string {
   throw std::exception();
 }
 
+auto IntToHexString(int num) -> std::string {
+  std::stringstream ioss;
+  std::string str;
+  ioss << std::hex << num;
+  ioss >> str;
+  return str;
+}
+
 auto InsToString(InsType ins) -> std::string {
   std::string s = OpcodeToString(ins.opcode_) + ' ';
   if (ins.rs1_ != -1) {
@@ -138,7 +147,7 @@ auto InsToString(InsType ins) -> std::string {
     s += std::to_string(ins.rs2_) + ' ';
   }
   if (ins.imm_ != -1) {
-    s += '(' + std::to_string(ins.imm_) + ") ";
+    s += '(' + IntToHexString(ins.imm_) + ") ";
   }
   if (ins.rd_ != -1) {
     s += "->" + std::to_string(ins.rd_);

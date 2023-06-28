@@ -36,11 +36,11 @@ void ReservationStation::Flush(State *current_state) {
 #ifdef DEBUG
   printf("\tCurrent reservation station is:\n");
   for (auto entry : arith_entries_) {
-    printf("\t\t@%-7d  %-20s   %-7d %-7d %-7d %-7d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(),
+    printf("\t\t@%-7d  %-20s   %-7x %-7x %-7d %-7d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(),
            entry.second.v1_, entry.second.v2_, entry.second.q1_, entry.second.q2_);
   }
   for (auto entry : ls_entries_) {
-    printf("\t\t@%-7d  %-20s   %-7d %-7d %-7d %-7d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(),
+    printf("\t\t@%-7d  %-20s   %-7x %-7x %-7d %-7d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(),
            entry.second.v1_, entry.second.v2_, entry.second.q1_, entry.second.q2_);
   }
   printf("\n");

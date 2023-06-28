@@ -28,7 +28,7 @@ void ReorderBuffer::Flush(State *current_state) {
   printf("\tCurrent reorder buffer is:\n");
   int i = entries_.head();
   for (auto entry : entries_) {
-    printf("\t\t@%-7d  %-20s   %-8s   %-7d %-7d\n", i++, InsToString(entry.ins_).c_str(),
+    printf("\t\t@%-7d  %-20s   %-8s   %-7d %-7x\n", i++, InsToString(entry.ins_).c_str(),
            RobStateToString(entry.state_).c_str(), entry.dest_, entry.value_);
   }
   printf("\n");

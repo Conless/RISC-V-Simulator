@@ -75,14 +75,14 @@ class circular_queue {  // NOLINT
         throw std::exception();
       }
       base_iterator cp = *this;
-      pos_ = (pos_ + 1) % SIZE;
+      pos_++;
       return cp;
     }
     auto operator++() -> base_iterator & {
       if (*this == iter_->end()) {
         throw std::exception();
       }
-      pos_ = (pos_ + 1) % SIZE;
+      pos_++;
       return *this;
     }
 

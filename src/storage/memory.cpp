@@ -64,9 +64,9 @@ void Memory::Execute(State *current_state, State *next_state) {
         mem_bus_->entries_[3] = {BusType::LoadFinish, 0, ram_[pos + 3]};
       }
     } else if (mem_bus_->entries_[0].type_ == BusType::StoreRequest) {
-      // for (auto entry : mem_bus_->entries_) {
-      //   ram_[entry.second.pos_] = entry.second.data_;
-      // }
+      for (auto entry : mem_bus_->entries_) {
+        ram_[entry.second.pos_] = entry.second.data_;
+      }
       mem_bus_->entries_[0] = {BusType::StoreFinish, 0, 0};
       mem_bus_->entries_.busy(1) = false;
       mem_bus_->entries_.busy(2) = false;
