@@ -189,9 +189,6 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
     next_state->stall_ = true;
   }
   Decode(input_ins, ins);
-#ifdef DEBUG
-
-#endif
   if (ins.opcode_ == AUIPC) {
     next_state->pc_ = current_state->pc_ + ins.imm_;
     return;
@@ -285,8 +282,7 @@ void InstructionUnit::Flush(State *current_state) {
     }
     ins_queue_.push(current_state->ins_reg_.second);
 #ifdef DEBUG
-    printf("Instruction queue receives: ");
-    DisplayIns(current_state->ins_reg_.second);
+    printf("\tInstruction queue receives: %s\n", InsToString(current_state->ins_reg_.second).c_str());
 #endif
   }
   current_state->ins_queue_full_ = ins_queue_.full();

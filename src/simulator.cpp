@@ -24,9 +24,7 @@ void Simulator::Init(AddrType pc) {
 
 void Simulator::Display() {
   printf(
-      "Clock cycle %d:\n\
-      Current pc: %x, Input instruction is %x\n\
-      Stall status: %d, Clean status: %d\n",
+      "Clock cycle %d:\n\tcurrent pc: %x, Input instruction is %x\n\tStall status: %d, Clean status: %d\n",
       clock_, current_state_->pc_, current_state_->input_ins_, current_state_->stall_, current_state_->clean_); // NOLINT
 }
 
@@ -47,6 +45,9 @@ void Simulator::Flush() {
   arith_logic_unit_->Flush(current_state_);
   ls_buffer_->Flush(current_state_);
 
+#ifdef DEBUG
+  printf("\n\n");
+#endif
   next_state_ = new State;
   next_state_->stall_ = current_state_->stall_;
   next_state_->clean_ = current_state_->stall_;

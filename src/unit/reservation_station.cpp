@@ -26,8 +26,15 @@ void ReservationStation::Flush(State *current_state) {
       arith_entries_[space] = current_state->rss_entry_.second;
     }
 #ifdef DEBUG
-    printf("Reservation station receives: ");
-    DisplayIns(current_state->rss_entry_.second.ins_);
+    printf("\tReservation station receives @%d: %s\n", current_state->rss_entry_.second.rob_pos_, InsToString(current_state->rss_entry_.second.ins_).c_str());
+    printf("\tThe current reservation station is:\n");
+    for (auto entry : arith_entries_) {
+      printf("\t\t@%-4d  %-20s   %d\t%d\t%d\t%d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(), entry.second.v1_, entry.second.v2_, entry.second.q1_, entry.second.q2_);
+    }
+    for (auto entry : ls_entries_) {
+      printf("\t\t@%-4d  %-20s   %d\t%d\t%d\t%d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(), entry.second.v1_, entry.second.v2_, entry.second.q1_, entry.second.q2_);
+    }
+    printf("\n");
 #endif
   }
   current_state->ls_full_ = ls_entries_.full();

@@ -40,6 +40,10 @@ void LoadStoreBuffer::Flush(State *current_state) {
     } else {
       throw std::exception();
     }
+#ifdef DEBUG
+    printf("\tLSB receives @%d: %s %d bytes from 0x%x\n", new_entry.rob_pos_,
+           new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_, new_entry.start_addr_);
+#endif
   }
   MonitorMemb();
 }

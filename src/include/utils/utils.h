@@ -8,7 +8,7 @@ namespace conless {
 
 auto SignExtend(uint32_t imm, uint8_t length) -> int;
 auto OpcodeToString(Opcode opcode) -> std::string;
-void DisplayIns(InsType ins);
+auto InsToString(InsType ins) -> std::string;
 
 }  // namespace conless
 

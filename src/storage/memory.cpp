@@ -31,7 +31,7 @@ void Memory::Flush(State *current_state) {
     }
   }
 #ifdef DEBUG
-  printf("Memory counter: %d\n", counter_);
+  printf("\tMemory counter: %d\n", counter_);
 #endif
 }
 

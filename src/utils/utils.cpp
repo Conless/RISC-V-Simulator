@@ -1,6 +1,7 @@
 #include "utils/utils.h"
 #include <exception>
 #include <iostream>
+#include <string>
 
 namespace conless {
 
@@ -127,21 +128,21 @@ auto OpcodeToString(Opcode opcode) -> std::string {
   throw std::exception();
 }
 
-void DisplayIns(InsType ins) {
-  std::cout << OpcodeToString(ins.opcode_) << ' ';
+auto InsToString(InsType ins) -> std::string {
+  std::string s = OpcodeToString(ins.opcode_) + ' ';
   if (ins.rs1_ != -1) {
-    std::cout << ins.rs1_ << ' ';
+    s += std::to_string(ins.rs1_) + ' ';
   }
   if (ins.rs2_ != -1) {
-    std::cout << ins.rs2_ << ' ';
+    s += std::to_string(ins.rs2_) + ' ';
   }
   if (ins.imm_ != -1) {
-    std::cout << '(' << ins.imm_ << ") ";
+    s += '(' + std::to_string(ins.imm_) + ") ";
   }
   if (ins.rd_ != -1) {
-    std::cout << "->" << ins.rd_;
+    s += "->" + std::to_string(ins.rd_);
   }
-  std::cout << '\n';
+  return s;
 }
 
 }  // namespace conless

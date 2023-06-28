@@ -4,6 +4,7 @@
 #include "common/types.h"
 #include "simulator.h"
 #include "storage/bus.h"
+#include "utils/utils.h"
 
 namespace conless {
 
@@ -14,8 +15,7 @@ void ArithmeticLogicUnit::Flush(State *current_state) {
     }
     entries_.push(current_state->alu_entry_.second);
 #ifdef DEBUG
-    printf("ALU receives: ");
-    
+    printf("\tALU receives @%d: %s %d %d\n", current_state->alu_entry_.second.rob_pos_, OpcodeToString(current_state->alu_entry_.second.opcode_).c_str(), current_state->alu_entry_.second.lhs_, current_state->alu_entry_.second.rhs_);
 #endif
   }
 }

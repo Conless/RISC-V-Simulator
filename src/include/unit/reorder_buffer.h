@@ -16,6 +16,8 @@ struct RobEntry {
   int value_{0};
 };
 
+auto RobStateToString(RobState state) -> std::string;
+
 class State;
 class Bus;
 
