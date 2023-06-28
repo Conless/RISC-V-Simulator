@@ -96,6 +96,12 @@ void ReservationStation::ExecuteLoadStore(State *current_state, State *next_stat
       }
       continue;
     }
+    if (entry.ins_.opcode_type_ == OpcodeType::LOAD && current_state->load_full_) {
+      continue;
+    }
+    if (entry.ins_.opcode_type_ == OpcodeType::STORE && current_state->st_full_) {
+      return;
+    }
     LsbEntry lsb_entry{entry.ins_.opcode_type_, static_cast<AddrType>(entry.q1_ + entry.num_), 0, entry.rob_pos_,
                        entry.ins_.opcode_ != Opcode::LBU && entry.ins_.opcode_ != Opcode::LHU};
     BusEntry bus_entry{BusType::Executing, entry.rob_pos_, 0};

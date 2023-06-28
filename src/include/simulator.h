@@ -18,7 +18,8 @@ namespace conless {
 
 struct State {
   AddrType pc_{0};
-  bool stall_{false};
+  WordType input_ins_;
+  bool stall_{false}, clean_{false};
 
   bool ins_queue_full_{false}; // flush by iu at the beginning of this cycle
   std::pair<bool, InsType> ins_reg_{false, InsType{}}; // edit by FetchDecode in last cycle
@@ -32,10 +33,10 @@ struct State {
 
   std::pair<bool, AluEntry> alu_entry_{false, AluEntry()};
 
-  bool load_full_{false}, st_full_{false}, st_req_{false}; // flush by lsb at the beginning of this cycle
+  bool load_full_{false}, st_full_{false};  // flush by lsb at the beginning of this cycle
+  int st_req_{0}; // edit by Commit in last cycle
   std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()}; // edit by LoadStore in last cycle
 
-  // Flush in simulator
   RegisterFile reg_file_; // edit by Commit in last cycle
 };
 
@@ -45,11 +46,10 @@ class Simulator {
  public:
   Simulator();
   void Init(AddrType pc);
-  void Flush();
   auto Run() -> ReturnType;
 
  protected:
-  void FetchDecode();
+  void Flush();
 
  private:
   Memory *memory_;
