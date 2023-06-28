@@ -8,9 +8,10 @@
 namespace conless {
 
 void LoadStoreBuffer::Flush(State *current_state) {
-  if (current_state->clean_) {
+  if (current_state->clean_) {  //  TODO(Conless): it's unsafe
     store_buffer_.clean();
     load_buffer_.clean();
+    return;
   }
   if (current_state->lsb_entry_.first) {
     auto &new_entry = current_state->lsb_entry_.second;
@@ -36,16 +37,29 @@ void LoadStoreBuffer::Flush(State *current_state) {
         }
         throw std::exception();
       }
-      store_buffer_.push(new_entry);
+      load_buffer_.push(new_entry);
     } else {
       throw std::exception();
     }
 #ifdef DEBUG
-    printf("\tLSB receives @%d: %s %d bytes from 0x%x\n", new_entry.rob_pos_,
-           new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_, new_entry.start_addr_);
+    printf("\tLSB receives @%d: %s %d bytes %s 0x%x\n", new_entry.rob_pos_,
+           new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_,
+           new_entry.type_ == OpcodeType::LOAD ? "from" : "to", new_entry.start_addr_);
 #endif
   }
   MonitorMemb();
+#ifdef DEBUG
+  printf("\tCurrent load store buffer is:\n");
+  for (auto entry : load_buffer_) {
+    printf("\t\t@%-7d %s %d bytes from 0x%x\n", entry.rob_pos_, entry.type_ == OpcodeType::LOAD ? "LD" : "ST",
+           entry.length_, entry.start_addr_);
+  }
+  for (auto entry : store_buffer_) {
+    printf("\t\t@%-7d %s %d bytes to 0x%x\n", entry.rob_pos_, entry.type_ == OpcodeType::LOAD ? "LD" : "ST",
+           entry.length_, entry.start_addr_);
+  }
+  printf("\n");
+#endif
 }
 
 void LoadStoreBuffer::MonitorMemb() {
@@ -62,11 +76,11 @@ void LoadStoreBuffer::MonitorMemb() {
     }
     BusEntry bus_entry{BusType::WriteBack, store_entry.rob_pos_, memb_entry.data_};
     temp_bus_entries_.push(bus_entry);
+    mem_bus_->entries_.clean();
+  } else if (memb_entry.type_ == BusType::StoreFinish) {
+    store_buffer_.pop();
+    mem_bus_->entries_.clean();
   }
-  mem_bus_->entries_.busy(0) = false;
-  mem_bus_->entries_.busy(1) = false;
-  mem_bus_->entries_.busy(2) = false;
-  mem_bus_->entries_.busy(3) = false;
 }
 
 void LoadStoreBuffer::Execute(State *current_state, State *next_state) {

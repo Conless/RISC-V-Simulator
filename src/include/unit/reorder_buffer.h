@@ -11,12 +11,11 @@ enum RobState { Issue, Exec, Write, Side };
 struct RobEntry {
   InsType ins_;
   RobState state_;
+  int rob_pos_;
   AddrType ins_addr_;
   int dest_{-1};
   int value_{0};
 };
-
-auto RobStateToString(RobState state) -> std::string;
 
 class State;
 class Bus;

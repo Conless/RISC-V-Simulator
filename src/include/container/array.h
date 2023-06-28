@@ -53,6 +53,11 @@ class array {  // NOLINT
     return data_[pos].second;
   }
   auto busy(const int pos) -> bool & { return data_[pos].first; }  // NOLINT
+  void clean() { // NOLINT
+    for (int i = 0; i < SIZE; i++) {
+      data_[i].first = false;
+    }
+  }
 
  public:
   template <bool const_tag>

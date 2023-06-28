@@ -104,15 +104,9 @@ class circular_queue {  // NOLINT
 
  public:
   auto begin() -> iterator {  // NOLINT
-    if (empty()) {
-      throw std::exception();
-    }
     return {this, head_};
   }
   auto end() -> iterator {  // NOLINT
-    if (empty()) {
-      throw std::exception();
-    }
     return {this, tail_ + 1};
   }
 

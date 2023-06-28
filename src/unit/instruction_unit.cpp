@@ -219,31 +219,16 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
     return;
   }
   InsType ins = ins_queue_.front();
-  RobEntry next_rob_entry{ins, RobState::Issue, ins.ins_addr_, ins.rd_};
+  RobEntry next_rob_entry{ins, RobState::Issue, current_state->rob_tail_, ins.ins_addr_, ins.rd_};
   RssEntry next_rss_entry{ins, current_state->rob_tail_, ins.imm_};
   if (ins.opcode_type_ == OpcodeType::LOAD || ins.opcode_type_ == OpcodeType::STORE) {
     if (current_state->ls_full_) {
       return;
     }
-    if (ins.opcode_type_ == OpcodeType::STORE) {
-      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
-        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
-      } else {
-        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
-      }
-      if (current_state->reg_file_.regs_[ins.rs2_].dependency_ == -1) {
-        next_rss_entry.v2_ = current_state->reg_file_.regs_[ins.rs2_].data_;
-      } else {
-        next_rss_entry.q2_ = current_state->reg_file_.regs_[ins.rs2_].dependency_;
-      }
-    } else if (ins.opcode_type_ == OpcodeType::LOAD) {
-      if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
-        next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
-      } else {
-        next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
-      }
+    if (current_state->reg_file_.regs_[ins.rs1_].dependency_ == -1) {
+      next_rss_entry.v1_ = current_state->reg_file_.regs_[ins.rs1_].data_;
     } else {
-      throw std::exception();
+      next_rss_entry.q1_ = current_state->reg_file_.regs_[ins.rs1_].dependency_;
     }
   } else {
     if (current_state->arith_full_) {
@@ -270,6 +255,9 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
       throw std::exception();
     }
   }
+  if (ins.rd_ != -1) {
+    next_state->reg_file_.regs_[ins.rd_].dependency_ = current_state->rob_tail_;
+  }
   ins_queue_.pop();
   next_state->rob_entry_ = {true, next_rob_entry};
   next_state->rss_entry_ = {true, next_rss_entry};
@@ -282,10 +270,17 @@ void InstructionUnit::Flush(State *current_state) {
     }
     ins_queue_.push(current_state->ins_reg_.second);
 #ifdef DEBUG
-    printf("\tInstruction queue receives: %s\n", InsToString(current_state->ins_reg_.second).c_str());
+    printf("\tInstruction queue receives: %s\n\n", InsToString(current_state->ins_reg_.second).c_str());
 #endif
   }
   current_state->ins_queue_full_ = ins_queue_.full();
+#ifdef DEBUG
+  printf("\tCurrent instruction queue is:\n");
+  for (auto entry : ins_queue_) {
+    printf("\t\t%s\n", InsToString(entry).c_str());
+  }
+  printf("\n");
+#endif
 }
 
 void InstructionUnit::Execute(State *current_state, State *next_state) {

@@ -26,12 +26,12 @@ void Memory::Init() {
 
 void Memory::Flush(State *current_state) {
   if (counter_ == 0) {
-    if (mem_bus_->entries_[0].type_ == BusType::LoadRequest || mem_bus_->entries_[0].type_ == BusType::StoreRequest) {
+    if (mem_bus_->entries_.busy(0) && (mem_bus_->entries_[0].type_ == BusType::LoadRequest || mem_bus_->entries_[0].type_ == BusType::StoreRequest)) {
       counter_ = 3;
     }
   }
 #ifdef DEBUG
-  printf("\tMemory counter: %d\n", counter_);
+  printf("\tMemory counter: %d\n\n", counter_);
 #endif
 }
 
@@ -40,7 +40,7 @@ auto Memory::FetchWordUnsafe(AddrType pos) -> WordType {
 }
 
 void Memory::Execute(State *current_state, State *next_state) {
-  if (--counter_ != 0) {
+  if (counter_ == 0 || --counter_ != 0) {
     return;
   }
   if (mem_bus_->entries_.busy(0)) {

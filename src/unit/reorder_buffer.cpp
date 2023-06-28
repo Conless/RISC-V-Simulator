@@ -7,22 +7,6 @@
 
 namespace conless {
 
-auto RobStateToString(RobState state) -> std::string {
-  if (state == RobState::Issue) {
-    return "Issue";
-  }
-  if (state == RobState::Exec) {
-    return "Exec";
-  }
-  if (state == RobState::Side) {
-    return "Side";
-  }
-  if (state == RobState::Write) {
-    return "Write";
-  }
-  throw std::exception();
-}
-
 void ReorderBuffer::Flush(State *current_state) {
   if (current_state->clean_) {
     entries_.clean();
@@ -35,18 +19,20 @@ void ReorderBuffer::Flush(State *current_state) {
     entries_.push(current_state->rob_entry_.second);
 #ifdef DEBUG
     printf("\tReorder buffer receives: %s\n", InsToString(current_state->rob_entry_.second.ins_).c_str());
-    printf("\tThe current reorder buffer is:\n");
-    int i = entries_.head();
-    for (auto entry : entries_) {
-      printf("\t\t@%-4d  %-20s   %-8s   %d\t%d\n", i++, InsToString(entry.ins_).c_str(), RobStateToString(entry.state_).c_str(),
-             entry.dest_, entry.value_);
-    }
-    printf("\n");
 #endif
   }
   current_state->rob_full_ = entries_.full();
   current_state->rob_tail_ = entries_.tail() + 1;
   MonitorCdb();
+#ifdef DEBUG
+  printf("\tCurrent reorder buffer is:\n");
+  int i = entries_.head();
+  for (auto entry : entries_) {
+    printf("\t\t@%-7d  %-20s   %-8s   %-7d %-7d\n", i++, InsToString(entry.ins_).c_str(),
+           RobStateToString(entry.state_).c_str(), entry.dest_, entry.value_);
+  }
+  printf("\n");
+#endif
 }
 
 void ReorderBuffer::Execute(State *current_state, State *next_state) { Commit(current_state, next_state); }
@@ -80,6 +66,7 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
   if (entry.ins_.opcode_ == Opcode::JALR) {
     next_state->reg_file_.regs_[entry.ins_.rd_] = {static_cast<int>(entry.ins_addr_), -1};
     next_state->pc_ = entry.value_;  // TODO(conless): fix it
+    next_state->stall_ = false;
   } else if (entry.ins_.opcode_type_ == OpcodeType::BRANCH) {
     if (entry.ins_.rd_ != entry.value_) {
       next_state->clean_ = true;
@@ -89,6 +76,9 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
   } else if (entry.ins_.opcode_type_ == OpcodeType::ARITHI || entry.ins_.opcode_type_ == OpcodeType::ARITHR ||
              entry.ins_.opcode_type_ == OpcodeType::LOAD) {
     next_state->reg_file_.regs_[entry.ins_.rd_].data_ = entry.value_;
+    if (next_state->reg_file_.regs_[entry.ins_.rd_].dependency_ == entries_.head()) {
+      next_state->reg_file_.regs_[entry.ins_.rd_].dependency_ = -1;
+    }
   } else if (entry.ins_.opcode_type_ == OpcodeType::STORE) {
     if (current_state->st_req_.full()) {
       return;
@@ -96,8 +86,11 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
     entry.value_ = current_state->reg_file_.regs_[entry.ins_.rs2_].data_;
     for (auto next_entry : entries_) {
       if (next_entry.state_ == RobState::Side && next_entry.value_ == entries_.head()) {
-        next_entry.state_ = RobState::Write;
-        next_entry.value_ = entry.value_;
+        int space = cd_bus_->entries_.space();
+        if (space == -1) {
+          return;
+        }
+        cd_bus_->entries_[space] = {BusType::WriteBack, next_entry.rob_pos_, entry.value_};
       }
     }
     current_state->st_req_.push(entry.value_);

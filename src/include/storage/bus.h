@@ -9,13 +9,13 @@
 namespace conless {
 
 enum BusType {
-  Executing = 0,
-  WriteBack = 1,
-  SideChannel = 2,
-  LoadFinish = 0,
-  StoreFinish = 1,
-  LoadRequest = 2,
-  StoreRequest = 3
+  Executing,
+  WriteBack,
+  SideChannel,
+  LoadFinish,
+  StoreFinish,
+  LoadRequest,
+  StoreRequest
 };
 
 struct BusEntry {
