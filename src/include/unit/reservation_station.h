@@ -22,9 +22,12 @@ class State;
 class ReservationStation {
  public:
   void Flush(State *current_state);
+  void Execute(State *current_state, State *next_state);
+
+ protected:
   void MonitorBus();
-  void ExecuteArith();
-  void ExecuteLoadStore();
+  void ExecuteArith(State *current_state, State *next_state);
+  void ExecuteLoadStore(State *current_state, State *next_state);
  private:
   array<RssEntry, MAX_RSS_SIZE> ls_entries_;
   array<RssEntry, MAX_RSS_SIZE> arith_entries_;

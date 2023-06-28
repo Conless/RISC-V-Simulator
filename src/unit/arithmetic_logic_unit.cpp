@@ -54,14 +54,16 @@ void ArithmeticLogicUnit::Execute() {
     bus_entry.data_ = alu_entry.lhs_ >> alu_entry.rhs_;
   } else if (alu_entry.opcode_ == Opcode::SRLI || alu_entry.opcode_ == Opcode::SRL) {
     bus_entry.data_ = static_cast<int>(static_cast<unsigned>(alu_entry.lhs_) >> static_cast<unsigned>(alu_entry.rhs_));
+  } else if (alu_entry.opcode_ == Opcode::JALR) {
+    bus_entry.data_ = (alu_entry.lhs_ + alu_entry.rhs_) & (~1);
   } else {
     throw std::exception();
   }
-  int space = cdb_->entries_.space();
+  int space = cd_bus_->entries_.space();
   if (space == -1) {
     throw std::exception();
   }
-  cdb_->entries_[space] = bus_entry;
+  cd_bus_->entries_[space] = bus_entry;
 }
 
 }  // namespace conless

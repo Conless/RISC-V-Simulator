@@ -1,8 +1,8 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include <cstring>
 #include <cstddef>
+#include <cstring>
 #include <iterator>
 
 namespace conless {
@@ -26,10 +26,9 @@ class array {  // NOLINT
     }
     return -1;
   }
-  auto full() -> bool {  // NOLINT
-    return space() == -1;
-  }
-  auto erase(const int pos) -> bool {  // NOLINT
+  auto full() -> bool { return space() == -1; }   // NOLINT
+  inline auto capacity() -> int { return SIZE; }  // NOLINT
+  auto erase(const int pos) -> bool {             // NOLINT
     if (!data_[pos].first) {
       return false;
     }
@@ -53,9 +52,7 @@ class array {  // NOLINT
     data_[pos].first = true;
     return data_[pos].second;
   }
-  auto busy(const int pos) -> bool & { // NOLINT
-    return data_[pos].first;
-  }
+  auto busy(const int pos) -> bool & { return data_[pos].first; }  // NOLINT
 
  public:
   template <bool const_tag>
@@ -129,7 +126,7 @@ class array {  // NOLINT
   using iterator = base_iterator<false>;
   using const_iterator = base_iterator<true>;
 
-  auto begin() -> iterator { // NOLINT
+  auto begin() -> iterator {  // NOLINT
     for (int i = 0; i < SIZE; i++) {
       if (data_[i].first) {
         return {this, i};

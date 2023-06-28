@@ -22,7 +22,7 @@ class ArithmeticLogicUnit {
 
  private:
   circular_queue<AluEntry> entries_;
-  Bus *cdb_;
+  Bus *cd_bus_;
 };
 
 }  // namespace conless

@@ -22,6 +22,10 @@ void Simulator::Flush() {
   delete current_state_;
   current_state_ = next_state_;
 
+  if (!current_state_->stall_) {
+    current_state_->input_ins_ = memory_->FetchWordUnsafe(current_state_->pc_);
+  }
+
   ins_unit_->Flush(current_state_);
   ro_buffer_->Flush(current_state_);
   rs_station_->Flush(current_state_);
@@ -32,17 +36,10 @@ void Simulator::Flush() {
   next_state_->reg_file_ = current_state_->reg_file_;
 }
 
-void Simulator::FetchDecode() {
-  if (current_state_->stall_) {
-    return;
-  }
-  WordType input_ins = memory_->FetchWordUnsafe(current_state_->pc_);
-  ins_unit_->FetchDecode(current_state_, input_ins);
-}
-
 auto Simulator::Run() -> ReturnType {
   while (true) {
-    FetchDecode();
+    ins_unit_->Execute(current_state_, next_state_);
+    rs_station_->Execute(current_state_, next_state_);
   }
   return 0;
 }
