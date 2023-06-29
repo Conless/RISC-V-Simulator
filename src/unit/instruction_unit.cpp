@@ -255,7 +255,7 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
       throw std::exception();
     }
   }
-  if (ins.rd_ != -1) {
+  if (ins.opcode_type_ != OpcodeType::BRANCH && ins.rd_ != -1) {
     next_state->reg_file_.regs_[ins.rd_].dependency_ = current_state->rob_tail_;
   }
   ins_queue_.pop();

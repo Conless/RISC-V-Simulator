@@ -27,7 +27,7 @@ class ReorderBuffer {
   void Execute(State *current_state, State *next_state);
 
  protected:
-  void MonitorCdb();
+  void MonitorCdb(State *current_state);
   void Commit(State *current_state, State *next_state);
 
  private:

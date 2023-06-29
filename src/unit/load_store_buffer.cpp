@@ -23,6 +23,11 @@ void LoadStoreBuffer::Flush(State *current_state) {
   }
   if (current_state->lsb_entry_.first) {
     auto &new_entry = current_state->lsb_entry_.second;
+#ifdef SHOW_ALL
+    printf("\tLSB receives @%d: %s %d bytes %s 0x%x\n", new_entry.rob_pos_,
+           new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_,
+           new_entry.type_ == OpcodeType::LOAD ? "from" : "to", new_entry.start_addr_);
+#endif
     if (new_entry.type_ == OpcodeType::STORE) {
       if (store_buffer_.full()) {
         throw std::exception();
@@ -32,7 +37,11 @@ void LoadStoreBuffer::Flush(State *current_state) {
       if (load_buffer_.full()) {
         throw std::exception();
       }
+      int side_pos = -1;
       for (auto entry : store_buffer_) {
+        if (entry.rob_pos_ > new_entry.rob_pos_) {
+          break;
+        }
         int entry_end_addr = entry.start_addr_ + entry.length_ - 1;
         int new_entry_end_addr = new_entry.start_addr_ + new_entry.length_ - 1;
         if ((entry_end_addr < new_entry.start_addr_ || entry.start_addr_ > new_entry_end_addr) ||
@@ -40,23 +49,22 @@ void LoadStoreBuffer::Flush(State *current_state) {
           continue;
         }
         if (entry.start_addr_ == new_entry.start_addr_ && entry_end_addr == new_entry_end_addr) {
-          temp_bus_entries_.push({BusType::SideChannel, new_entry.rob_pos_, entry.rob_pos_});
-          return;
+          side_pos = entry.rob_pos_;
+        } else {
+          throw std::exception();
         }
-        throw std::exception();
+      }
+      if (side_pos != -1) {
+        temp_bus_entries_.push({BusType::SideChannel, new_entry.rob_pos_, side_pos});
+        current_state->load_full_ = load_buffer_.full();
+        current_state->store_full_ = store_buffer_.full();
+        return;
       }
       load_buffer_.push(new_entry);
     } else {
       throw std::exception();
     }
-#ifdef SHOW_ALL
-    printf("\tLSB receives @%d: %s %d bytes %s 0x%x\n", new_entry.rob_pos_,
-           new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_,
-           new_entry.type_ == OpcodeType::LOAD ? "from" : "to", new_entry.start_addr_);
-#endif
   }
-  current_state->load_full_ = load_buffer_.full();
-  current_state->store_full_ = store_buffer_.full();
   MonitorMemb();
 #ifdef SHOW_ALL
   printf("\tCurrent load store buffer is:\n");
@@ -116,19 +124,19 @@ void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
       mem_bus_->entries_.busy(2) = false;
       mem_bus_->entries_.busy(3) = false;
     } else if (store_entry.length_ == 2) {
-      mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_),
-                               data & 0b11111111};
-      mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1), data >> 8 & 0b11111111};
+      mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_), data & 0b11111111};
+      mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1),
+                               data >> 8 & 0b11111111};
       mem_bus_->entries_.busy(2) = false;
       mem_bus_->entries_.busy(3) = false;
     } else if (store_entry.length_ == 4) {
-      mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_),
-                               data & 0b11111111};
+      mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_), data & 0b11111111};
       mem_bus_->entries_[1] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 1),
                                data >> 8 & 0b11111111};
       mem_bus_->entries_[2] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 2),
                                data >> 16 & 0b11111111};
-      mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3), data >> 24 & 0b11111111};
+      mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3),
+                               data >> 24 & 0b11111111};
     }
     next_state->st_req_.first = false;
     return;

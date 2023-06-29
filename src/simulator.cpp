@@ -25,10 +25,7 @@ void Simulator::Init(AddrType pc) {
   next_state_->pc_ = pc;
 #ifdef SHOW_ALL
   time_t now = time(nullptr);
-
-  // 把 now 转换为字符串形式
   char *dt = ctime(&now);
-
   std::cout << "Debugging log at " << dt << std ::endl;
 #endif
 }
@@ -66,7 +63,7 @@ void Simulator::Display() {
 }
 
 void Simulator::Flush() {
-  // if (clock_ > 15000) {
+  // if (clock_ > 5e3) {
   //   exit(0);
   // }
   clock_++;

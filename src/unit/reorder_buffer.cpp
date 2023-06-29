@@ -26,12 +26,12 @@ void ReorderBuffer::Flush(State *current_state) {
   }
   current_state->rob_full_ = entries_.full();
   current_state->rob_tail_ = entries_.tail() + 1;
-  MonitorCdb();
+  MonitorCdb(current_state);
 #ifdef SHOW_ALL
   printf("\tCurrent reorder buffer is:\n");
   int i = entries_.head();
   for (auto entry : entries_) {
-    printf("\t\t@%-7d  %-20s   %-8s   %-7d %-7x\n", i++, InsToString(entry.ins_).c_str(),
+    printf("\t\t@%-7d (%04x)  %-20s   %-8s   %-7d %-7x\n", i++, entry.ins_addr_, InsToString(entry.ins_).c_str(),
            RobStateToString(entry.state_).c_str(), entry.dest_, entry.value_);
   }
   printf("\n");
@@ -40,7 +40,7 @@ void ReorderBuffer::Flush(State *current_state) {
 
 void ReorderBuffer::Execute(State *current_state, State *next_state) { Commit(current_state, next_state); }
 
-void ReorderBuffer::MonitorCdb() {
+void ReorderBuffer::MonitorCdb(State *current_state) {
   for (auto bus_entry : cd_bus_->entries_) {
     if (bus_entry.second.type_ == BusType::Executing) {
       entries_[bus_entry.second.pos_].state_ = RobState::Exec;
@@ -48,8 +48,13 @@ void ReorderBuffer::MonitorCdb() {
       entries_[bus_entry.second.pos_].state_ = RobState::Write;
       entries_[bus_entry.second.pos_].value_ = bus_entry.second.data_;
     } else if (bus_entry.second.type_ == BusType::SideChannel) {
-      entries_[bus_entry.second.pos_].state_ = RobState::Side;
-      entries_[bus_entry.second.pos_].value_ = bus_entry.second.data_;
+      if (bus_entry.second.data_ == current_state->st_req_.second.first) {
+        entries_[bus_entry.second.pos_].state_ = RobState::Write;
+        entries_[bus_entry.second.pos_].value_ = current_state->st_req_.second.second;
+      } else {
+        entries_[bus_entry.second.pos_].state_ = RobState::Side;
+        entries_[bus_entry.second.pos_].value_ = bus_entry.second.data_;
+      }
     }
   }
 }
@@ -111,13 +116,13 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
   }
 #ifdef SHOW_REG
   printf("Finish executing pc %x with regs:\n", entry.ins_addr_);
-  // for (int i = 1; i < REG_FILE_SIZE; i++) {
-  //   auto &reg = next_state->reg_file_.regs_[i];
-  //   if (reg.data_ != 0) {
-  //     printf("[%02d]:%-8x", i, reg.data_);
-  //   }
-  // }
-  // printf("\n");
+  for (int i = 1; i < REG_FILE_SIZE; i++) {
+    auto &reg = next_state->reg_file_.regs_[i];
+    if (reg.data_ != 0) {
+      printf("[%02d]:%-8x", i, reg.data_);
+    }
+  }
+  printf("\n");
 #endif
   entries_.pop();
 }

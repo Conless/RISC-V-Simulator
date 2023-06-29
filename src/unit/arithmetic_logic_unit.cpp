@@ -19,7 +19,9 @@ void ArithmeticLogicUnit::Flush(State *current_state) {
     }
     entries_.push(current_state->alu_entry_.second);
 #ifdef SHOW_ALL
-    printf("\tALU receives @%d: %s %x %x\n", current_state->alu_entry_.second.rob_pos_, OpcodeToString(current_state->alu_entry_.second.opcode_).c_str(), current_state->alu_entry_.second.lhs_, current_state->alu_entry_.second.rhs_);
+    printf("\tALU receives @%d: %s %x %x\n", current_state->alu_entry_.second.rob_pos_,
+           OpcodeToString(current_state->alu_entry_.second.opcode_).c_str(), current_state->alu_entry_.second.lhs_,
+           current_state->alu_entry_.second.rhs_);
 #endif
   }
 }
@@ -39,13 +41,11 @@ void ArithmeticLogicUnit::Execute(State *current_state, State *next_state) {
     bus_entry.data_ = static_cast<int>(alu_entry.lhs_ < alu_entry.rhs_);
   } else if (alu_entry.opcode_ == Opcode::BLTU || alu_entry.opcode_ == Opcode::SLTIU ||
              alu_entry.opcode_ == Opcode::SLTU) {
-    bus_entry.data_ = static_cast<int>((alu_entry.lhs_ < 0) ||
-                                       (static_cast<unsigned>(alu_entry.lhs_) < static_cast<unsigned>(alu_entry.rhs_)));
+    bus_entry.data_ = static_cast<int>(static_cast<unsigned>(alu_entry.lhs_) < static_cast<unsigned>(alu_entry.rhs_));
   } else if (alu_entry.opcode_ == Opcode::BGE) {
     bus_entry.data_ = static_cast<int>(alu_entry.lhs_ >= alu_entry.rhs_);
   } else if (alu_entry.opcode_ == Opcode::BGEU) {
-    bus_entry.data_ = static_cast<int>(
-        alu_entry.lhs_ >= 0 && (static_cast<unsigned>(alu_entry.lhs_) >= static_cast<unsigned>(alu_entry.rhs_)));
+    bus_entry.data_ = static_cast<int>(static_cast<unsigned>(alu_entry.lhs_) >= static_cast<unsigned>(alu_entry.rhs_));
   } else if (alu_entry.opcode_ == Opcode::ADDI || alu_entry.opcode_ == Opcode::ADD) {
     bus_entry.data_ = alu_entry.lhs_ + alu_entry.rhs_;
   } else if (alu_entry.opcode_ == Opcode::SUB) {
