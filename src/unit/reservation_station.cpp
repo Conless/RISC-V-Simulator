@@ -10,6 +10,13 @@
 namespace conless {
 
 void ReservationStation::Flush(State *current_state) {
+  if (current_state->clean_) {
+    ls_entries_.clean();
+    arith_entries_.clean();
+    current_state->ls_full_ = ls_entries_.full();
+    current_state->arith_full_ = arith_entries_.full();
+    return;
+  }
   if (current_state->rss_entry_.first) {
     if (current_state->rss_entry_.second.ins_.opcode_type_ == OpcodeType::STORE ||
         current_state->rss_entry_.second.ins_.opcode_type_ == OpcodeType::LOAD) {
@@ -25,7 +32,7 @@ void ReservationStation::Flush(State *current_state) {
       }
       arith_entries_[space] = current_state->rss_entry_.second;
     }
-#ifdef DEBUG
+#ifdef SHOW_ALL
     printf("\tReservation station receives @%d: %s\n", current_state->rss_entry_.second.rob_pos_,
            InsToString(current_state->rss_entry_.second.ins_).c_str());
 #endif
@@ -33,7 +40,7 @@ void ReservationStation::Flush(State *current_state) {
   current_state->ls_full_ = ls_entries_.full();
   current_state->arith_full_ = arith_entries_.full();
   MonitorCdb();
-#ifdef DEBUG
+#ifdef SHOW_ALL
   printf("\tCurrent reservation station is:\n");
   for (auto entry : arith_entries_) {
     printf("\t\t@%-7d  %-20s   %-7x %-7x %-7d %-7d\n", entry.second.rob_pos_, InsToString(entry.second.ins_).c_str(),
@@ -54,7 +61,7 @@ void ReservationStation::Execute(State *current_state, State *next_state) {
 
 void ReservationStation::MonitorCdb() {
   for (auto bus_entry : cd_bus_->entries_) {
-    if (bus_entry.second.type_ != BusType::WriteBack) {
+    if (bus_entry.second.type_ != BusType::WriteBack && bus_entry.second.type_ != BusType::CommitReg) {
       continue;
     }
     std::pair<int, int> dep_data = {bus_entry.second.pos_, bus_entry.second.data_};
@@ -124,7 +131,7 @@ void ReservationStation::ExecuteLoadStore(State *current_state, State *next_stat
     if (entry.ins_.opcode_type_ == OpcodeType::LOAD && current_state->load_full_) {
       continue;
     }
-    if (entry.ins_.opcode_type_ == OpcodeType::STORE && current_state->st_full_) {
+    if (entry.ins_.opcode_type_ == OpcodeType::STORE && current_state->store_full_) {
       return;
     }
     LsbEntry lsb_entry{entry.ins_.opcode_type_, static_cast<AddrType>(entry.v1_ + entry.num_), 0, entry.rob_pos_,

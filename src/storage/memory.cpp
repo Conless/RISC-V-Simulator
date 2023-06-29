@@ -1,6 +1,7 @@
 #include "storage/memory.h"
 #include <iostream>
 #include "common/types.h"
+#include "simulator.h"
 #include "storage/bus.h"
 #include "utils/utils.h"
 
@@ -30,7 +31,7 @@ void Memory::Flush(State *current_state) {
       counter_ = 3;
     }
   }
-#ifdef DEBUG
+#ifdef SHOW_ALL
   printf("\tMemory counter: %d\n\n", counter_);
 #endif
 }

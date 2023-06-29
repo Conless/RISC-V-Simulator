@@ -12,6 +12,7 @@ enum BusType {
   Executing,
   WriteBack,
   SideChannel,
+  CommitReg,
   LoadFinish,
   StoreFinish,
   LoadRequest,

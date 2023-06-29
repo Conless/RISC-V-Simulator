@@ -193,6 +193,9 @@ auto BusTypeToString(BusType type) -> std::string {
   if (type == BusType::WriteBack) {
     return "WriteBack";
   }
+  if (type == BusType::CommitReg) {
+    return "CommitReg";
+  }
   throw std::exception();
 }
 

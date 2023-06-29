@@ -8,9 +8,17 @@
 namespace conless {
 
 void LoadStoreBuffer::Flush(State *current_state) {
-  if (current_state->clean_) {  //  TODO(Conless): it's unsafe
-    store_buffer_.clean();
+  if (current_state->clean_) {
     load_buffer_.clean();
+    if (current_state->st_req_.first) {
+      auto store_entry = store_buffer_.pop();
+      store_buffer_.clean();
+      store_buffer_.push(store_entry);
+    } else {
+      store_buffer_.clean();
+    }
+    current_state->load_full_ = load_buffer_.full();
+    current_state->store_full_ = store_buffer_.full();
     return;
   }
   if (current_state->lsb_entry_.first) {
@@ -41,14 +49,16 @@ void LoadStoreBuffer::Flush(State *current_state) {
     } else {
       throw std::exception();
     }
-#ifdef DEBUG
+#ifdef SHOW_ALL
     printf("\tLSB receives @%d: %s %d bytes %s 0x%x\n", new_entry.rob_pos_,
            new_entry.type_ == OpcodeType::LOAD ? "LD" : "ST", new_entry.length_,
            new_entry.type_ == OpcodeType::LOAD ? "from" : "to", new_entry.start_addr_);
 #endif
   }
+  current_state->load_full_ = load_buffer_.full();
+  current_state->store_full_ = store_buffer_.full();
   MonitorMemb();
-#ifdef DEBUG
+#ifdef SHOW_ALL
   printf("\tCurrent load store buffer is:\n");
   for (auto entry : load_buffer_) {
     printf("\t\t@%-7d %s %d bytes from 0x%x\n", entry.rob_pos_, entry.type_ == OpcodeType::LOAD ? "LD" : "ST",
@@ -78,7 +88,6 @@ void LoadStoreBuffer::MonitorMemb() {
     temp_bus_entries_.push(bus_entry);
     mem_bus_->entries_.clean();
   } else if (memb_entry.type_ == BusType::StoreFinish) {
-    store_buffer_.pop();
     mem_bus_->entries_.clean();
   }
 }
@@ -95,9 +104,12 @@ void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
   if (mem_bus_->entries_.busy(0)) {
     return;
   }
-  if (!current_state->st_req_.empty()) {
-    auto &store_entry = store_buffer_.front();
-    int data = current_state->st_req_.front();
+  if (current_state->st_req_.first) {
+    auto store_entry = store_buffer_.pop();
+    if (store_entry.rob_pos_ != current_state->st_req_.second.first) {
+      throw std::exception();
+    }
+    int data = current_state->st_req_.second.second;
     if (store_entry.length_ == 1) {
       mem_bus_->entries_[0] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_), data & 0b11111111};
       mem_bus_->entries_.busy(1) = false;
@@ -118,6 +130,7 @@ void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
                                data >> 16 & 0b11111111};
       mem_bus_->entries_[3] = {BusType::StoreRequest, static_cast<int>(store_entry.start_addr_ + 3), data >> 24 & 0b11111111};
     }
+    next_state->st_req_.first = false;
     return;
   }
   if (load_buffer_.empty()) {

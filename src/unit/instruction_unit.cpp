@@ -264,17 +264,21 @@ void InstructionUnit::Issue(State *current_state, State *next_state) {
 }
 
 void InstructionUnit::Flush(State *current_state) {
+  if (current_state->clean_) {
+    ins_queue_.clean();
+    current_state->ins_queue_full_ = ins_queue_.full();
+  }
   if (current_state->ins_reg_.first) {
     if (ins_queue_.full()) {
       throw std::exception();
     }
     ins_queue_.push(current_state->ins_reg_.second);
-#ifdef DEBUG
+#ifdef SHOW_ALL
     printf("\tInstruction queue receives: %s\n\n", InsToString(current_state->ins_reg_.second).c_str());
 #endif
   }
   current_state->ins_queue_full_ = ins_queue_.full();
-#ifdef DEBUG
+#ifdef SHOW_ALL
   printf("\tCurrent instruction queue is:\n");
   for (auto entry : ins_queue_) {
     printf("\t\t%s\n", InsToString(entry).c_str());

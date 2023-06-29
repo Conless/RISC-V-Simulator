@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define DEBUG
+#define SHOW_REG
 
 namespace conless {
 

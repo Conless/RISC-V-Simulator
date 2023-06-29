@@ -9,12 +9,16 @@
 namespace conless {
 
 void ArithmeticLogicUnit::Flush(State *current_state) {
+  if (current_state->clean_) {
+    entries_.clean();
+    return;
+  }
   if (current_state->alu_entry_.first) {
     if (entries_.full()) {
       throw std::exception();
     }
     entries_.push(current_state->alu_entry_.second);
-#ifdef DEBUG
+#ifdef SHOW_ALL
     printf("\tALU receives @%d: %s %x %x\n", current_state->alu_entry_.second.rob_pos_, OpcodeToString(current_state->alu_entry_.second.opcode_).c_str(), current_state->alu_entry_.second.lhs_, current_state->alu_entry_.second.rhs_);
 #endif
   }

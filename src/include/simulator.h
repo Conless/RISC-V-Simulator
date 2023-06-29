@@ -35,8 +35,8 @@ struct State {
 
   std::pair<bool, AluEntry> alu_entry_{false, AluEntry()};
 
-  bool load_full_{false}, st_full_{false};  // flush by lsb at the beginning of this cycle
-  circular_queue<int, 4> st_req_;
+  bool load_full_{false}, store_full_{false};  // flush by lsb at the beginning of this cycle
+  std::pair<bool, std::pair<int, int>> st_req_; // inherit each cycle, edit by rob in last cycle and lsb in this cycle
   std::pair<bool, LsbEntry> lsb_entry_{false, LsbEntry()}; // edit by LoadStore in last cycle
 
   RegisterFile reg_file_; // edit by Commit in last cycle

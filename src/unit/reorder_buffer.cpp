@@ -1,5 +1,6 @@
 #include "unit/reorder_buffer.h"
 #include <exception>
+#include "common/config.h"
 #include "common/types.h"
 #include "simulator.h"
 #include "storage/bus.h"
@@ -10,6 +11,8 @@ namespace conless {
 void ReorderBuffer::Flush(State *current_state) {
   if (current_state->clean_) {
     entries_.clean();
+    current_state->rob_full_ = entries_.full();
+    current_state->rob_tail_ = entries_.tail() + 1;
     return;
   }
   if (current_state->rob_entry_.first) {
@@ -17,14 +20,14 @@ void ReorderBuffer::Flush(State *current_state) {
       throw std::exception();
     }
     entries_.push(current_state->rob_entry_.second);
-#ifdef DEBUG
+#ifdef SHOW_ALL
     printf("\tReorder buffer receives: %s\n", InsToString(current_state->rob_entry_.second.ins_).c_str());
 #endif
   }
   current_state->rob_full_ = entries_.full();
   current_state->rob_tail_ = entries_.tail() + 1;
   MonitorCdb();
-#ifdef DEBUG
+#ifdef SHOW_ALL
   printf("\tCurrent reorder buffer is:\n");
   int i = entries_.head();
   for (auto entry : entries_) {
@@ -69,23 +72,32 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
     next_state->stall_ = false;
   } else if (entry.ins_.opcode_type_ == OpcodeType::BRANCH) {
     if (entry.ins_.rd_ != entry.value_) {
+#ifdef SHOW_PC
+      printf("Predict wrong at %x.\n", entry.ins_.ins_addr_);
+#endif
       next_state->clean_ = true;
+      next_state->pc_ = entry.value_ != 0 ? entry.ins_addr_ + entry.ins_.imm_ : entry.ins_addr_ + 4;
     } else {
       // TODO(Conless): prediction
     }
   } else if (entry.ins_.opcode_type_ == OpcodeType::ARITHI || entry.ins_.opcode_type_ == OpcodeType::ARITHR ||
              entry.ins_.opcode_type_ == OpcodeType::LOAD) {
+    int space = cd_bus_->entries_.space();
+    if (space == -1) {
+      return;
+    }
     next_state->reg_file_.regs_[entry.ins_.rd_].data_ = entry.value_;
-    if (next_state->reg_file_.regs_[entry.ins_.rd_].dependency_ == entries_.head()) {
+    if (next_state->reg_file_.regs_[entry.ins_.rd_].dependency_ == entry.rob_pos_) {
       next_state->reg_file_.regs_[entry.ins_.rd_].dependency_ = -1;
     }
+    cd_bus_->entries_[space] = {BusType::CommitReg, entry.rob_pos_, entry.value_};
   } else if (entry.ins_.opcode_type_ == OpcodeType::STORE) {
-    if (current_state->st_req_.full()) {
+    if (current_state->st_req_.first) {
       return;
     }
     entry.value_ = current_state->reg_file_.regs_[entry.ins_.rs2_].data_;
     for (auto next_entry : entries_) {
-      if (next_entry.state_ == RobState::Side && next_entry.value_ == entries_.head()) {
+      if (next_entry.state_ == RobState::Side && next_entry.value_ == entry.rob_pos_) {
         int space = cd_bus_->entries_.space();
         if (space == -1) {
           return;
@@ -93,10 +105,20 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
         cd_bus_->entries_[space] = {BusType::WriteBack, next_entry.rob_pos_, entry.value_};
       }
     }
-    current_state->st_req_.push(entry.value_);
+    next_state->st_req_ = {true, {entry.rob_pos_, entry.value_}};
   } else {
     throw std::exception();
   }
+#ifdef SHOW_REG
+  printf("Finish executing pc %x with regs:\n", entry.ins_addr_);
+  for (int i = 1; i < REG_FILE_SIZE; i++) {
+    auto &reg = next_state->reg_file_.regs_[i];
+    if (reg.data_ != 0) {
+      printf("[%02d]:%-8x", i, reg.data_);
+    }
+  }
+  printf("\n");
+#endif
   entries_.pop();
 }
 
