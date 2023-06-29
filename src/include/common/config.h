@@ -12,7 +12,7 @@ constexpr int REG_FILE_SIZE = 32;
 
 constexpr int MAX_RSS_SIZE = 32;
 
-constexpr int BUS_WIDTH = 4;
+constexpr int BUS_WIDTH = 8;
 }  // namespace conless
 
 #endif

@@ -66,10 +66,9 @@ void Simulator::Display() {
 }
 
 void Simulator::Flush() {
-  if (clock_ > 1e3) {
-    exit(0);
-  }
-
+  // if (clock_ > 15000) {
+  //   exit(0);
+  // }
   clock_++;
   delete current_state_;
   current_state_ = next_state_;
@@ -103,10 +102,10 @@ void Simulator::Flush() {
 #endif
   memory_->Flush(current_state_);
   ins_unit_->Flush(current_state_);
+  ls_buffer_->Flush(current_state_);
   ro_buffer_->Flush(current_state_);
   rs_station_->Flush(current_state_);
   arith_logic_unit_->Flush(current_state_);
-  ls_buffer_->Flush(current_state_);
   cd_bus_->entries_.clean();
 
 #ifdef SHOW_ALL
@@ -114,6 +113,7 @@ void Simulator::Flush() {
   printf("\n\n");
 #endif
   next_state_ = new State;
+  next_state_->pc_ = current_state_->pc_;
   next_state_->stall_ = current_state_->stall_;
   next_state_->reg_file_ = current_state_->reg_file_;
   next_state_->st_req_ = current_state_->st_req_;

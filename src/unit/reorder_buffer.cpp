@@ -111,13 +111,13 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
   }
 #ifdef SHOW_REG
   printf("Finish executing pc %x with regs:\n", entry.ins_addr_);
-  for (int i = 1; i < REG_FILE_SIZE; i++) {
-    auto &reg = next_state->reg_file_.regs_[i];
-    if (reg.data_ != 0) {
-      printf("[%02d]:%-8x", i, reg.data_);
-    }
-  }
-  printf("\n");
+  // for (int i = 1; i < REG_FILE_SIZE; i++) {
+  //   auto &reg = next_state->reg_file_.regs_[i];
+  //   if (reg.data_ != 0) {
+  //     printf("[%02d]:%-8x", i, reg.data_);
+  //   }
+  // }
+  // printf("\n");
 #endif
   entries_.pop();
 }

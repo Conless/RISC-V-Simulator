@@ -94,11 +94,11 @@ void LoadStoreBuffer::MonitorMemb() {
 
 void LoadStoreBuffer::Execute(State *current_state, State *next_state) {
   while (!temp_bus_entries_.empty()) {
-    auto temp_entry = temp_bus_entries_.pop();
     int space = cd_bus_->entries_.space();
     if (space == -1) {
       throw std::exception();
     }
+    auto temp_entry = temp_bus_entries_.pop();
     cd_bus_->entries_[space] = temp_entry;
   }
   if (mem_bus_->entries_.busy(0)) {
