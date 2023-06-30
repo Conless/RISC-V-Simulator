@@ -2,12 +2,11 @@
 #define SIMULATOR_H
 
 #include <iostream>
-#include <queue>
 
 #include "common/config.h"
 #include "common/types.h"
+
 #include "container/circular_queue.h"
-#include "storage/memory.h"
 
 #include "unit/arithmetic_logic_unit.h"
 #include "unit/instruction_unit.h"
@@ -15,6 +14,7 @@
 #include "unit/reorder_buffer.h"
 #include "unit/reservation_station.h"
 #include "unit/load_store_buffer.h"
+#include "unit/memory_unit.h"
 
 namespace conless {
 
@@ -58,7 +58,7 @@ class Simulator {
   int clock_{0};
   Bus *cd_bus_;
   Bus *mem_bus_;
-  Memory *memory_;
+  MemoryUnit *memory_;
   InstructionUnit *ins_unit_;
   ReorderBuffer *ro_buffer_;
   ReservationStation *rs_station_;

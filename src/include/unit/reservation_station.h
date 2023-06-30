@@ -6,6 +6,7 @@
 #include "container/array.h"
 
 #include "storage/bus.h"
+#include "unit/base_unit.h"
 
 namespace conless {
 
@@ -19,11 +20,11 @@ struct RssEntry {
 
 class State;
 
-class ReservationStation {
+class ReservationStation : public BaseUnit {
  public:
   explicit ReservationStation(Bus *cd_bus) : cd_bus_(cd_bus) {}
-  void Flush(State *current_state);
-  void Execute(State *current_state, State *next_state);
+  void Flush(State *current_state) override;
+  void Execute(State *current_state, State *next_state) override;
 
  protected:
   void MonitorCdb();

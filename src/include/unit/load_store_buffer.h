@@ -5,6 +5,7 @@
 #include "common/types.h"
 #include "container/circular_queue.h"
 #include "storage/bus.h"
+#include "unit/base_unit.h"
 
 namespace conless {
 
@@ -18,7 +19,7 @@ struct LsbEntry {
 
 class State;
 
-class LoadStoreBuffer {
+class LoadStoreBuffer : public BaseUnit {
  public:
   LoadStoreBuffer(Bus *mem_bus, Bus *cd_bus) : mem_bus_(mem_bus), cd_bus_(cd_bus) {}
   void Flush(State *current_state);

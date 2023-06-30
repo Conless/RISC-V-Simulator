@@ -4,6 +4,7 @@ set(UNIT_SOURCE_CPPS
   unit/arithmetic_logic_unit.cpp
   unit/instruction_unit.cpp
   unit/load_store_buffer.cpp
+  unit/memory_unit.cpp
   unit/reorder_buffer.cpp
   unit/reservation_station.cpp
 )

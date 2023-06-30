@@ -8,7 +8,7 @@ namespace conless {
 Simulator::Simulator() {
   cd_bus_ = new Bus;
   mem_bus_ = new Bus;
-  memory_ = new Memory(mem_bus_);
+  memory_ = new MemoryUnit(mem_bus_);
   ins_unit_ = new InstructionUnit;
   ro_buffer_ = new ReorderBuffer(cd_bus_);
   rs_station_ = new ReservationStation(cd_bus_);

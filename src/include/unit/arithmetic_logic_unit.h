@@ -3,6 +3,7 @@
 
 #include "common/types.h"
 #include "container/circular_queue.h"
+#include "unit/base_unit.h"
 
 namespace conless {
 
@@ -15,11 +16,11 @@ struct AluEntry {
 class State;
 class Bus;
 
-class ArithmeticLogicUnit {
+class ArithmeticLogicUnit : public BaseUnit {
  public:
   explicit ArithmeticLogicUnit(Bus *cd_bus) : cd_bus_(cd_bus) {}
-  void Flush(State *current_state);
-  void Execute(State *current_state, State *next_state);
+  void Flush(State *current_state) override;
+  void Execute(State *current_state, State *next_state) override;
 
  private:
   circular_queue<AluEntry> entries_;

@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(CMAKE_C_COMPILER "/usr/bin/gcc")
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
-set(CMAKE_CXX_FLAGS "-g -O0")
+set(CMAKE_CXX_FLAGS "-g -Ofast")
 
 include_directories(src/include)
 
