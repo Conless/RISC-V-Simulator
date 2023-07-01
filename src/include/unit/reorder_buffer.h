@@ -4,6 +4,7 @@
 #include "common/types.h"
 #include "container/circular_queue.h"
 #include "unit/base_unit.h"
+#include "unit/predict_unit.h"
 
 namespace conless {
 
@@ -23,7 +24,7 @@ class Bus;
 
 class ReorderBuffer : public BaseUnit {
  public:
-  explicit ReorderBuffer(Bus *cd_bus) : cd_bus_(cd_bus) {}
+  explicit ReorderBuffer(Bus *cd_bus, Predictor *predictor) : cd_bus_(cd_bus), predictor_(predictor) {}
   void Flush(State *current_state) override;
   void Execute(State *current_state, State *next_state) override;
 
@@ -34,6 +35,7 @@ class ReorderBuffer : public BaseUnit {
  private:
   circular_queue<RobEntry> entries_;
   Bus *cd_bus_;
+  Predictor *predictor_;
 };
 
 }  // namespace conless

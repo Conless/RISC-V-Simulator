@@ -12,6 +12,7 @@ class State;
 
 class InstructionUnit : public BaseUnit {
  public:
+  explicit InstructionUnit(Predictor *predictor) : predictor_(predictor) {}
   void Flush(State *current_state) override;
   void Execute(State *current_state, State *next_state) override;
 
@@ -20,7 +21,7 @@ class InstructionUnit : public BaseUnit {
   void Issue(State *current_state, State *next_state);
 
  private:
-  PredictUnit predictor_;
+  Predictor *predictor_;
   circular_queue<InsType> ins_queue_;
 };
 

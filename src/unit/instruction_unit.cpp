@@ -194,7 +194,7 @@ void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordT
     return;
   }
   if (ins.opcode_type_ == OpcodeType::BRANCH) {
-    ins.rd_ = static_cast<int>(predictor_.GetPredictResult(current_state->pc_));
+    ins.rd_ = static_cast<int>(predictor_->GetPredictResult(current_state->pc_));
     if (ins.rd_ != 0) {
       next_state->pc_ = current_state->pc_ + ins.imm_;
     } else {

@@ -68,22 +68,21 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
     return;
   }
   if (entry.ins_.opcode_ == Opcode::ADDI && entry.ins_.rd_ == 10 && entry.ins_.rs1_ == 0 && entry.ins_.imm_ == 255) {
-    printf("%u\n", static_cast<unsigned>(current_state->reg_file_.regs_[10].data_) & 255U);
-    exit(0);
+    next_state->terminate_ = true;
+    return;
   }
   if (entry.ins_.opcode_ == Opcode::JALR) {
     next_state->reg_file_.regs_[entry.ins_.rd_] = {static_cast<int>(entry.ins_addr_), -1};
-    next_state->pc_ = entry.value_;  // TODO(conless): fix it
+    next_state->pc_ = entry.value_;
     next_state->stall_ = false;
   } else if (entry.ins_.opcode_type_ == OpcodeType::BRANCH) {
+    predictor_->PredictFeedBack(entry.ins_addr_, entry.ins_.rd_ != 0, entry.value_ != 0);
     if (entry.ins_.rd_ != entry.value_) {
 #ifdef SHOW_PC
       printf("Predict wrong at %x.\n", entry.ins_.ins_addr_);
 #endif
       next_state->clean_ = true;
       next_state->pc_ = entry.value_ != 0 ? entry.ins_addr_ + entry.ins_.imm_ : entry.ins_addr_ + 4;
-    } else {
-      // TODO(Conless): prediction
     }
   } else if (entry.ins_.opcode_type_ == OpcodeType::ARITHI || entry.ins_.opcode_type_ == OpcodeType::ARITHR ||
              entry.ins_.opcode_type_ == OpcodeType::LOAD) {

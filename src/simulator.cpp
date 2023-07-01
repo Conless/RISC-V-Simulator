@@ -4,8 +4,6 @@
 #include <random>
 
 #include "common/config.h"
-#include "storage/bus.h"
-#include "unit/base_unit.h"
 #include "utils/utils.h"
 
 namespace conless {
@@ -13,9 +11,10 @@ namespace conless {
 Simulator::Simulator() {
   cd_bus_ = new Bus;
   mem_bus_ = new Bus;
+  predictor_ = new Predictor;
   units_[0] = new MemoryUnit(mem_bus_);
-  units_[1] = new InstructionUnit;
-  units_[2] = new ReorderBuffer(cd_bus_);
+  units_[1] = new InstructionUnit(predictor_);
+  units_[2] = new ReorderBuffer(cd_bus_, predictor_);
   units_[3] = new ReservationStation(cd_bus_);
   units_[4] = new ArithmeticLogicUnit(cd_bus_);
   units_[5] = new LoadStoreBuffer(mem_bus_, cd_bus_);
@@ -67,9 +66,6 @@ void Simulator::Display() {
 }
 
 void Simulator::Flush() {
-  // if (clock_ > 5e3) {
-  //   exit(0);
-  // }
   clock_++;
   delete current_state_;
   current_state_ = next_state_;
@@ -116,6 +112,10 @@ void Simulator::Flush() {
 auto Simulator::Run() -> ReturnType {
   while (true) {
     Flush();
+    if (current_state_->terminate_) {
+      // predictor_->PrintPredictLog();
+      return current_state_->reg_file_.regs_[10].data_ & 255U;
+    }
     std::shuffle(units_, units_ + 6, std::mt19937(std::random_device()()));
     for (auto & unit : units_) {
       unit->Execute(current_state_, next_state_);
