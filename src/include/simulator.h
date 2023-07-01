@@ -58,12 +58,7 @@ class Simulator {
   int clock_{0};
   Bus *cd_bus_;
   Bus *mem_bus_;
-  MemoryUnit *memory_;
-  InstructionUnit *ins_unit_;
-  ReorderBuffer *ro_buffer_;
-  ReservationStation *rs_station_;
-  ArithmeticLogicUnit *arith_logic_unit_;
-  LoadStoreBuffer *ls_buffer_;
+  BaseUnit *units_[6];
   State *current_state_, *next_state_;
 };
 

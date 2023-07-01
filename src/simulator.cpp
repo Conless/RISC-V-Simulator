@@ -1,6 +1,11 @@
 #include "simulator.h"
+
+#include <algorithm>
+#include <random>
+
 #include "common/config.h"
 #include "storage/bus.h"
+#include "unit/base_unit.h"
 #include "utils/utils.h"
 
 namespace conless {
@@ -8,18 +13,17 @@ namespace conless {
 Simulator::Simulator() {
   cd_bus_ = new Bus;
   mem_bus_ = new Bus;
-  memory_ = new MemoryUnit(mem_bus_);
-  ins_unit_ = new InstructionUnit;
-  ro_buffer_ = new ReorderBuffer(cd_bus_);
-  rs_station_ = new ReservationStation(cd_bus_);
-  arith_logic_unit_ = new ArithmeticLogicUnit(cd_bus_);
-  ls_buffer_ = new LoadStoreBuffer(mem_bus_, cd_bus_);
+  units_[0] = new MemoryUnit(mem_bus_);
+  units_[1] = new InstructionUnit;
+  units_[2] = new ReorderBuffer(cd_bus_);
+  units_[3] = new ReservationStation(cd_bus_);
+  units_[4] = new ArithmeticLogicUnit(cd_bus_);
+  units_[5] = new LoadStoreBuffer(mem_bus_, cd_bus_);
   current_state_ = new State;
   next_state_ = new State;
 }
 
 void Simulator::Init(AddrType pc) {
-  memory_->Init();
   current_state_ = nullptr;
   next_state_ = new State;
   next_state_->pc_ = pc;
@@ -85,10 +89,6 @@ void Simulator::Flush() {
       reg.dependency_ = -1;
     }
   }
-
-  if (!current_state_->stall_) {
-    current_state_->input_ins_ = memory_->FetchWordUnsafe(current_state_->pc_);
-  }
 #ifdef SHOW_PC
   if (!current_state_->stall_) {
     printf("Cycle %d, PC %x\n", clock_, current_state_->pc_);
@@ -97,12 +97,9 @@ void Simulator::Flush() {
 #ifdef SHOW_ALL
   Display();
 #endif
-  memory_->Flush(current_state_);
-  ins_unit_->Flush(current_state_);
-  ls_buffer_->Flush(current_state_);
-  ro_buffer_->Flush(current_state_);
-  rs_station_->Flush(current_state_);
-  arith_logic_unit_->Flush(current_state_);
+  for (auto & unit : units_) {
+    unit->Flush(current_state_);
+  }
   cd_bus_->entries_.clean();
 
 #ifdef SHOW_ALL
@@ -119,12 +116,10 @@ void Simulator::Flush() {
 auto Simulator::Run() -> ReturnType {
   while (true) {
     Flush();
-    memory_->Execute(current_state_, next_state_);
-    ins_unit_->Execute(current_state_, next_state_);
-    ro_buffer_->Execute(current_state_, next_state_);
-    rs_station_->Execute(current_state_, next_state_);
-    arith_logic_unit_->Execute(current_state_, next_state_);
-    ls_buffer_->Execute(current_state_, next_state_);
+    std::shuffle(units_, units_ + 6, std::mt19937(std::random_device()()));
+    for (auto & unit : units_) {
+      unit->Execute(current_state_, next_state_);
+    }
   }
   return 0;
 }

@@ -13,8 +13,7 @@ class State;
 
 class MemoryUnit : public BaseUnit {
  public:
-  explicit MemoryUnit(Bus *mem_bus) : mem_bus_(mem_bus) {}
-  void Init();
+  explicit MemoryUnit(Bus *mem_bus) : mem_bus_(mem_bus) { ram_.Init(); }
   void Flush(State *current_state) override;
   void Execute(State *current_state, State *next_state) override;
   auto FetchWordUnsafe(AddrType pos) -> WordType;

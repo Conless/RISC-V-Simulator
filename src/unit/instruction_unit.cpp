@@ -182,7 +182,7 @@ void Decode(WordType input_ins, InsType &ins) {
 void InstructionUnit::FetchDecode(State *current_state, State *next_state, WordType input_ins) {
   InsType ins;
   ins.ins_addr_ = current_state->pc_;
-  if (current_state->ins_queue_full_ || current_state->stall_) {
+  if (current_state->ins_queue_full_ || current_state->stall_ || next_state->clean_) {
     return;
   }
   if (input_ins == 0x0ff00513) {

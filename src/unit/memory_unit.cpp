@@ -1,11 +1,13 @@
 #include "unit/memory_unit.h"
 #include "storage/bus.h"
+#include "simulator.h"
 
 namespace conless {
 
-void MemoryUnit::Init() { ram_.Init(); }
-
 void MemoryUnit::Flush(State *current_state) {
+  if (!current_state->stall_) {
+    current_state->input_ins_ = FetchWordUnsafe(current_state->pc_);
+  }
   if (counter_ == 0) {
     if (mem_bus_->entries_.busy(0) && (mem_bus_->entries_[0].type_ == BusType::LoadRequest || mem_bus_->entries_[0].type_ == BusType::StoreRequest)) {
       counter_ = 3;
