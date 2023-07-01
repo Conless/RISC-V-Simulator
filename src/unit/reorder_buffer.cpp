@@ -114,7 +114,7 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
     throw std::exception();
   }
 #ifdef SHOW_REG
-  printf("Finish executing pc %x with regs:\n", entry.ins_addr_);
+  printf("Finish executing pc %x (@%d) with regs:\n", entry.ins_addr_, entry.rob_pos_);
   for (int i = 1; i < REG_FILE_SIZE; i++) {
     auto &reg = next_state->reg_file_.regs_[i];
     if (reg.data_ != 0) {

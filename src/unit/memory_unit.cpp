@@ -10,7 +10,7 @@ void MemoryUnit::Flush(State *current_state) {
   }
   if (counter_ == 0) {
     if (mem_bus_->entries_.busy(0) && (mem_bus_->entries_[0].type_ == BusType::LoadRequest || mem_bus_->entries_[0].type_ == BusType::StoreRequest)) {
-      counter_ = 3;
+      counter_ = 2;
     }
   }
 #ifdef SHOW_ALL

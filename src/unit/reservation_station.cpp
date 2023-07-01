@@ -60,32 +60,59 @@ void ReservationStation::Execute(State *current_state, State *next_state) {
 }
 
 void ReservationStation::MonitorCdb() {
+  std::pair<bool, int> updated_data[MAX_ROB_SIZE]{{false, 0}};
   for (auto bus_entry : cd_bus_->entries_) {
     if (bus_entry.second.type_ != BusType::WriteBack && bus_entry.second.type_ != BusType::CommitReg) {
       continue;
     }
-    std::pair<int, int> dep_data = {bus_entry.second.pos_, bus_entry.second.data_};
-    for (auto &entry : arith_entries_) {
-      if (entry.second.q1_ == dep_data.first) {
-        entry.second.v1_ = dep_data.second;
-        entry.second.q1_ = -1;
-      }
-      if (entry.second.q2_ == dep_data.first) {
-        entry.second.v2_ = dep_data.second;
-        entry.second.q2_ = -1;
-      }
+    updated_data[bus_entry.second.pos_ % MAX_QUEUE_SIZE] = {true, bus_entry.second.data_};
+  }
+  for (auto &entry : arith_entries_) {
+    if (entry.second.q1_ != -1 && updated_data[entry.second.q1_ % MAX_QUEUE_SIZE].first) {
+      entry.second.v1_ = updated_data[entry.second.q1_ % MAX_QUEUE_SIZE].second;
+      entry.second.q1_ = -1;
     }
-    for (auto &entry : ls_entries_) {
-      if (entry.second.q1_ == dep_data.first) {
-        entry.second.v1_ = dep_data.second;
-        entry.second.q1_ = -1;
-      }
-      if (entry.second.q2_ == dep_data.first) {
-        entry.second.v2_ = dep_data.second;
-        entry.second.q2_ = -1;
-      }
+    if (entry.second.q2_ != -1 && updated_data[entry.second.q2_ % MAX_QUEUE_SIZE].first) {
+      entry.second.v2_ = updated_data[entry.second.q2_ % MAX_QUEUE_SIZE].second;
+      entry.second.q2_ = -1;
     }
   }
+  for (auto &entry : ls_entries_) {
+    if (entry.second.q1_ != -1 && updated_data[entry.second.q1_ % MAX_QUEUE_SIZE].first) {
+      entry.second.v1_ = updated_data[entry.second.q1_ % MAX_QUEUE_SIZE].second;
+      entry.second.q1_ = -1;
+    }
+    if (entry.second.q2_ != -1 && updated_data[entry.second.q2_ % MAX_QUEUE_SIZE].first) {
+      entry.second.v2_ = updated_data[entry.second.q2_ % MAX_QUEUE_SIZE].second;
+      entry.second.q2_ = -1;
+    }
+  }
+  // for (auto bus_entry : cd_bus_->entries_) {
+  //   if (bus_entry.second.type_ != BusType::WriteBack && bus_entry.second.type_ != BusType::CommitReg) {
+  //     continue;
+  //   }
+  //   std::pair<int, int> dep_data = {bus_entry.second.pos_ % MAX_QUEUE_SIZE, bus_entry.second.data_};
+  //   for (auto &entry : arith_entries_) {
+  //     if (entry.second.q1_ % MAX_QUEUE_SIZE == dep_data.first) {
+  //       entry.second.v1_ = dep_data.second;
+  //       entry.second.q1_ = -1;
+  //     }
+  //     if (entry.second.q2_ % MAX_QUEUE_SIZE == dep_data.first) {
+  //       entry.second.v2_ = dep_data.second;
+  //       entry.second.q2_ = -1;
+  //     }
+  //   }
+  //   for (auto &entry : ls_entries_) {
+  //     if (entry.second.q1_ % MAX_QUEUE_SIZE == dep_data.first) {
+  //       entry.second.v1_ = dep_data.second;
+  //       entry.second.q1_ = -1;
+  //     }
+  //     if (entry.second.q2_ % MAX_QUEUE_SIZE == dep_data.first) {
+  //       entry.second.v2_ = dep_data.second;
+  //       entry.second.q2_ = -1;
+  //     }
+  //   }
+  // }
 }
 
 void ReservationStation::ExecuteArith(State *current_state, State *next_state) {

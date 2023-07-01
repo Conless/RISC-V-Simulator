@@ -35,6 +35,7 @@ struct Counter {
 class Predictor {
  public:
   auto GetPredictResult(AddrType pc) -> bool {
+    // return true;
     return counters_[pc].data_[1];
   }
   void PredictFeedBack(AddrType pc, bool predict_result, bool real_result) {
