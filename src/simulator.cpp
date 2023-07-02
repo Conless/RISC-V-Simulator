@@ -112,12 +112,9 @@ void Simulator::Flush() {
 auto Simulator::Run() -> ReturnType {
   while (true) {
     Flush();
-    if (clock_ % 100000 == 0) {
-      exit(0);
-    }
     if (current_state_->terminate_) {
-      printf("Clock cycle = %d\n", clock_);
-      predictor_->PrintPredictLog();
+      // printf("Clock cycle = %d\n", clock_);
+      // predictor_->PrintPredictLog();
       return current_state_->reg_file_.regs_[10].data_ & 255U;
     }
     // std::shuffle(units_, units_ + 6, std::mt19937(std::random_device()()));
