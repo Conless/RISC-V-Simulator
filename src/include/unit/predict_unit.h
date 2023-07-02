@@ -2,8 +2,8 @@
 #define PREDICT_UNIT_H
 
 #include <bitset>
-#include <map>
 
+#include "common/config.h"
 #include "common/types.h"
 
 namespace conless {
@@ -35,29 +35,32 @@ struct Counter {
 class Predictor {
  public:
   auto GetPredictResult(AddrType pc) -> bool {
-    // return true;
+    pc = GetPcHash(pc);
     return counters_[pc].data_[1];
   }
   void PredictFeedBack(AddrType pc, bool predict_result, bool real_result) {
+    pc = GetPcHash(pc);
     if (real_result) {
       ++counters_[pc];
     } else {
       --counters_[pc];
     }
     if (real_result == predict_result) {
-      ++predict_log_.first;
+      ++success_count_;
     } else {
-      ++predict_log_.second;
+      ++failure_count_;
     }
   }
   void PrintPredictLog() {
-    printf("Success / Failure = %d / %d, Success Rate = %.2f\n", predict_log_.first, predict_log_.second,
-           1.0 * predict_log_.first / (predict_log_.first + predict_log_.second));
+    printf("Success / Failure = %d / %d, Success Rate = %.2f\n", success_count_, failure_count_,
+           1.0 * success_count_ / (success_count_ + failure_count_));
   }
 
  private:
-  std::map<AddrType, Counter> counters_;
-  std::pair<int, int> predict_log_;
+  auto GetPcHash(AddrType pc) -> AddrType { return pc % PREDICT_UNIT_SIZE; }
+
+  Counter counters_[PREDICT_UNIT_SIZE];
+  int success_count_{0}, failure_count_{0};
 };
 
 }  // namespace conless
