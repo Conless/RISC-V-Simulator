@@ -25,7 +25,7 @@ auto Predictor::GetPredictResult(AddrType PC) -> bool {
 
 void Predictor::PredictFeedBack(AddrType PC, bool result, bool predict) {
   AddrType i = HashPC(PC);
-  if (result != predict && !result) {
+  if (result != predict) {
     failure_count_++;
   } else {
     success_count_++;

@@ -113,7 +113,7 @@ auto Simulator::Run() -> ReturnType {
   while (true) {
     Flush();
     if (current_state_->terminate_) {
-      // printf("Clock cycle = %d\n", clock_);
+      printf("Clock cycle = %d\n", clock_);
       predictor_->PrintPredictLog();
       return current_state_->reg_file_.regs_[10].data_ & 255U;
     }
