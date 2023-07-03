@@ -24,8 +24,10 @@ struct BusEntry {
   int pos_;
   int data_;
 };
+
 struct Bus {
-  array<BusEntry, BUS_WIDTH> entries_;
+  explicit Bus(int width) : entries_(width) {}
+  array<BusEntry> entries_;
 };
 
 }  // namespace conless

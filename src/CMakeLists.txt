@@ -5,13 +5,13 @@ set(UNIT_SOURCE_CPPS
   unit/instruction_unit.cpp
   unit/load_store_buffer.cpp
   unit/memory_unit.cpp
+  unit/predict_unit.cpp
   unit/reorder_buffer.cpp
   unit/reservation_station.cpp
 )
 
 set(STORAGE_SOURCE_CPPS
   storage/memory.cpp
-  storage/bus.cpp
 )
 
 set(UTILS_SOURCE_CPPS

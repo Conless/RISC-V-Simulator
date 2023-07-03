@@ -22,7 +22,7 @@ class State;
 
 class ReservationStation : public BaseUnit {
  public:
-  explicit ReservationStation(Bus *cd_bus) : cd_bus_(cd_bus) {}
+  explicit ReservationStation(Bus *cd_bus) : cd_bus_(cd_bus), ls_entries_(MAX_RSS_SIZE), arith_entries_(MAX_RSS_SIZE) {}
   void Flush(State *current_state) override;
   void Execute(State *current_state, State *next_state) override;
 
@@ -31,8 +31,8 @@ class ReservationStation : public BaseUnit {
   void ExecuteArith(State *current_state, State *next_state);
   void ExecuteLoadStore(State *current_state, State *next_state);
  private:
-  array<RssEntry, MAX_RSS_SIZE> ls_entries_;
-  array<RssEntry, MAX_RSS_SIZE> arith_entries_;
+  array<RssEntry> ls_entries_;
+  array<RssEntry> arith_entries_;
   Bus *cd_bus_;
 };
 }  // namespace conless

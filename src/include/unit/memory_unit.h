@@ -19,7 +19,7 @@ class MemoryUnit : public BaseUnit {
   auto FetchWordUnsafe(AddrType pos) -> WordType;
 
  private:
-  Memory<MAX_RAM_SIZE> ram_;
+  Memory ram_;
   Bus *mem_bus_;
   int counter_{0};
 };

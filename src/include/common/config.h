@@ -15,7 +15,9 @@ constexpr int REG_FILE_SIZE = 32;
 
 constexpr int MAX_RSS_SIZE = 10;
 
-constexpr int BUS_WIDTH = 6;
+constexpr int CDB_WIDTH = 8;
+
+constexpr int MEMB_WIDTH = 4;
 
 constexpr int PREDICT_UNIT_SIZE = 1 << 10;
 

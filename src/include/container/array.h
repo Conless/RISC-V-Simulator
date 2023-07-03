@@ -7,19 +7,20 @@
 
 namespace conless {
 
-template <class T, int SIZE>
+template <class T>
 class array {  // NOLINT
  public:
   using value_type = std::pair<bool, T>;
 
-  array() {
-    for (int i = 0; i < SIZE; i++) {
+  explicit array(int size) : size_(size) {
+    data_ = new std::pair<bool, T>[size_];
+    for (int i = 0; i < size_; i++) {
       data_[i].first = false;
     }
   }
 
   auto space() -> int {  // NOLINT
-    for (int i = 0; i < SIZE; i++) {
+    for (int i = 0; i < size_; i++) {
       if (!data_[i].first) {
         return i;
       }
@@ -27,7 +28,7 @@ class array {  // NOLINT
     return -1;
   }
   auto full() -> bool { return space() == -1; }   // NOLINT
-  inline auto capacity() -> int { return SIZE; }  // NOLINT
+  inline auto capacity() -> int { return size_; }  // NOLINT
   auto erase(const int pos) -> bool {             // NOLINT
     if (!data_[pos].first) {
       return false;
@@ -39,13 +40,13 @@ class array {  // NOLINT
     if (!data_[pos].first) {
       return false;
     }
-    for (int i = pos; i < SIZE - 1; i++) {
+    for (int i = pos; i < size_ - 1; i++) {
       data_[i] = data_[i + 1];
       if (!data_[i].first) {
         return true;
       }
     }
-    data_[SIZE - 1].first = false;
+    data_[size_ - 1].first = false;
     return true;
   }
   auto operator[](const int pos) -> T & {
@@ -54,7 +55,7 @@ class array {  // NOLINT
   }
   auto busy(const int pos) -> bool & { return data_[pos].first; }  // NOLINT
   void clean() { // NOLINT
-    for (int i = 0; i < SIZE; i++) {
+    for (int i = 0; i < size_; i++) {
       data_[i].first = false;
     }
   }
@@ -67,40 +68,40 @@ class array {  // NOLINT
     friend class base_iterator<false>;
 
    private:
-    array<T, SIZE> *iter_{nullptr};
+    array<T> *iter_{nullptr};
     int pos_{-1};
 
    public:
     using difference_type = std::ptrdiff_t;
-    using value_type = typename array<T, SIZE>::value_type;
+    using value_type = typename array<T>::value_type;
     using iterator_category = std::output_iterator_tag;
     using pointer = typename std::conditional<const_tag, const value_type *, value_type *>::type;
     using reference = typename std::conditional<const_tag, const value_type &, value_type &>::type;
 
     base_iterator() = default;
-    base_iterator(array<T, SIZE> *iter, int pos) : iter_(iter), pos_(pos) {}
+    base_iterator(array<T> *iter, int pos) : iter_(iter), pos_(pos) {}
     template <bool _const_tag>
     explicit base_iterator(const base_iterator<_const_tag> &other) : iter_(other.iter_), pos_(other.pos_) {}
 
     auto operator++(int) -> base_iterator {
       auto cp = *this;
-      for (int i = pos_ + 1; i < SIZE; i++) {
+      for (int i = pos_ + 1; i < iter_->size_; i++) {
         if (iter_->data_[i].first) {
           pos_ = i;
           return cp;
         }
       }
-      pos_ = SIZE;
+      pos_ = iter_->size_;
       return cp;
     }
     auto operator++() -> base_iterator & {
-      for (int i = pos_ + 1; i < SIZE; i++) {
+      for (int i = pos_ + 1; i < iter_->size_; i++) {
         if (iter_->data_[i].first) {
           pos_ = i;
           return *this;
         }
       }
-      pos_ = SIZE;
+      pos_ = iter_->size_;
       return *this;
     }
 
@@ -132,17 +133,18 @@ class array {  // NOLINT
   using const_iterator = base_iterator<true>;
 
   auto begin() -> iterator {  // NOLINT
-    for (int i = 0; i < SIZE; i++) {
+    for (int i = 0; i < size_; i++) {
       if (data_[i].first) {
         return {this, i};
       }
     }
-    return {this, SIZE};
+    return {this, size_};
   }
-  auto end() -> iterator { return {this, SIZE}; }  // NOLINT
+  auto end() -> iterator { return {this, size_}; }  // NOLINT
 
  private:
-  std::pair<bool, T> data_[SIZE];
+  const int size_;
+  std::pair<bool, T> *data_;
 };
 
 

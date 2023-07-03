@@ -76,7 +76,7 @@ void ReorderBuffer::Commit(State *current_state, State *next_state) {
     next_state->pc_ = entry.value_;
     next_state->stall_ = false;
   } else if (entry.ins_.opcode_type_ == OpcodeType::BRANCH) {
-    predictor_->PredictFeedBack(entry.ins_addr_, entry.ins_.rd_ != 0, entry.value_ != 0);
+    predictor_->PredictFeedBack(entry.ins_addr_, entry.value_ != 0, entry.ins_.rd_ != 0);
     if (entry.ins_.rd_ != entry.value_) {
 #ifdef SHOW_PC
       printf("Predict wrong at %x.\n", entry.ins_.ins_addr_);

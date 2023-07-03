@@ -10,8 +10,7 @@ namespace conless {
 
 inline auto HexToInt(char ch) -> int { return ch <= '9' ? ch - '0' : (ch - 'A') + 10; }
 
-template <size_t RAM_SIZE>
-void Memory<RAM_SIZE>::Init() {
+void Memory::Init() {
   char input_str[10];
   AddrType current_address = 0x0;
   while (std::cin >> input_str) {
@@ -27,14 +26,12 @@ void Memory<RAM_SIZE>::Init() {
   }
 }
 
-template <size_t RAM_SIZE>
-auto Memory<RAM_SIZE>::operator[](const size_t pos) -> ByteType & {
-  if (pos >= RAM_SIZE) {
+auto Memory::operator[](const size_t pos) -> ByteType & {
+  if (pos >= MAX_RAM_SIZE) {
     throw std::exception();
   }
   return ram_[pos];
 }
 
-template class Memory<MAX_RAM_SIZE>;
 
 }  // namespace conless

@@ -9,8 +9,8 @@
 namespace conless {
 
 Simulator::Simulator() {
-  cd_bus_ = new Bus;
-  mem_bus_ = new Bus;
+  cd_bus_ = new Bus(CDB_WIDTH);
+  mem_bus_ = new Bus(MEMB_WIDTH);
   predictor_ = new Predictor;
   units_[0] = new MemoryUnit(mem_bus_);
   units_[1] = new InstructionUnit(predictor_);
@@ -114,7 +114,7 @@ auto Simulator::Run() -> ReturnType {
     Flush();
     if (current_state_->terminate_) {
       // printf("Clock cycle = %d\n", clock_);
-      // predictor_->PrintPredictLog();
+      predictor_->PrintPredictLog();
       return current_state_->reg_file_.regs_[10].data_ & 255U;
     }
     // std::shuffle(units_, units_ + 6, std::mt19937(std::random_device()()));
